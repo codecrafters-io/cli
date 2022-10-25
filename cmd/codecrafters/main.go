@@ -10,7 +10,7 @@ import (
 // Usage: codecrafters test
 func main() {
 	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, `CLI to interact with CodeCrafters:
+		fmt.Fprintf(os.Stderr, `CLI to interact with CodeCrafters
 
 VERSION
   %s
