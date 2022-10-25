@@ -38,9 +38,7 @@ COMMANDS
 	case "test":
 		os.Exit(commands.TestCommand())
 	case "": // no argument
-		fmt.Fprintf(os.Stderr, "Unknown command. Did you mean to run \"codecrafters test\"?\n")
-		fmt.Fprintf(os.Stderr, "Run codecrafters help for a list of available commands.\n")
-		os.Exit(1)
+		flag.Usage()
 	default:
 		fmt.Fprintf(os.Stderr, "Unknown command: \"%s\". Did you mean to run \"codecrafters test\"?\n", cmd)
 		fmt.Fprintf(os.Stderr, "Error: Run codecrafters help for a list of available commands.\n")
