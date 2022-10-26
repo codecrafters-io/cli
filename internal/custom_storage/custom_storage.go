@@ -5,10 +5,11 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/cache"
 	"github.com/go-git/go-git/v5/storage/filesystem"
 	"github.com/go-git/go-git/v5/storage/filesystem/dotgit"
+	"github.com/go-git/go-git/v5/storage/memory"
 )
 
 type ObjectStorage = filesystem.ObjectStorage
-type IndexStorage = CustomIndexStorage
+type IndexStorage = memory.IndexStorage
 type ShallowStorage = CustomShallowStorage
 type ConfigStorage = CustomConfigStorage
 type ModuleStorage = CustomModuleStorage
@@ -28,19 +29,19 @@ type CustomStorage struct {
 
 // NewCustomStorage returns a new CustomStorage that uses an in-memory Index storage
 // backed by a given `fs.Filesystem` and cache.
-func NewCustomStorage(fs billy.Filesystem, cache cache.Object) *CustomStorage {
-	dir := dotgit.NewWithOptions(fs, dotgit.Options{})
+func NewCustomStorage(fs billy.Filesystem, cache cache.Object) (storage *CustomStorage) {
+	repoDir := dotgit.NewWithOptions(fs, dotgit.Options{})
 
 	return &CustomStorage{
 		fs:  fs,
-		dir: dir,
+		dir: repoDir,
 
-		ObjectStorage:    *filesystem.NewObjectStorageWithOptions(dir, cache, filesystem.Options{}),
-		ReferenceStorage: CustomReferenceStorage{dir: dir},
-		IndexStorage:     CustomIndexStorage{dir: dir},
-		ShallowStorage:   CustomShallowStorage{dir: dir},
-		ConfigStorage:    CustomConfigStorage{dir: dir},
-		ModuleStorage:    CustomModuleStorage{dir: dir},
+		ObjectStorage:    *filesystem.NewObjectStorageWithOptions(repoDir, cache, filesystem.Options{}),
+		ReferenceStorage: CustomReferenceStorage{dir: repoDir},
+		IndexStorage:     memory.IndexStorage{},
+		ShallowStorage:   CustomShallowStorage{dir: repoDir},
+		ConfigStorage:    CustomConfigStorage{dir: repoDir},
+		ModuleStorage:    CustomModuleStorage{dir: repoDir},
 	}
 }
 

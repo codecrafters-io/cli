@@ -2,6 +2,7 @@ package custom_storage
 
 import (
 	"bufio"
+	"github.com/go-git/go-billy/v5"
 	"os"
 
 	"github.com/go-git/go-git/v5/plumbing/format/index"
@@ -10,6 +11,7 @@ import (
 )
 
 type CustomIndexStorage struct {
+	fs  billy.Filesystem
 	dir *dotgit.DotGit
 }
 
