@@ -3,6 +3,7 @@ package commands
 import (
 	"fmt"
 	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/storage/memory"
 	"github.com/go-git/go-git/v5/storage/transactional"
 	"os"
@@ -48,6 +49,18 @@ func TestCommand() int {
 
 	fmt.Println(status)
 
+	err = worktree.Checkout(&git.CheckoutOptions{Keep: true, Branch: "test", Create: true})
+	if err != nil {
+		panic(err)
+	}
+
+	currentBranch, err := repository.Head()
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(currentBranch.Hash().String())
+
 	commitHash, err := worktree.Commit("test", &git.CommitOptions{})
 	if err != nil {
 		panic(err)
@@ -55,13 +68,17 @@ func TestCommand() int {
 
 	fmt.Println(commitHash.String())
 
-	err = worktree.Checkout(&git.CheckoutOptions{Keep: true, Branch: "test", Create: true})
+	currentBranch, err = repository.Head()
 	if err != nil {
 		panic(err)
 	}
 
+	fmt.Println("After commit")
+	fmt.Println(currentBranch.Hash().String())
+
 	err = repository.Push(&git.PushOptions{
 		RemoteName: "origin",
+		RefSpecs:   []config.RefSpec{"refs/heads/test:refs/heads/test"},
 	})
 	if err != nil {
 		panic(err)
