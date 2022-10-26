@@ -2,8 +2,9 @@ package commands
 
 import (
 	"fmt"
-	"github.com/codecrafters-io/cli/internal/custom_storage"
 	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/storage/memory"
+	"github.com/go-git/go-git/v5/storage/transactional"
 	"os"
 )
 
@@ -20,7 +21,7 @@ func TestCommand() int {
 		return 1
 	}
 
-	repository.Storer = custom_storage.NewCustomStorage(repository)
+	repository.Storer = transactional.NewStorage(repository.Storer, memory.NewStorage())
 
 	worktree, err := repository.Worktree()
 	if err != nil {
@@ -53,6 +54,18 @@ func TestCommand() int {
 	}
 
 	fmt.Println(commitHash.String())
+
+	err = worktree.Checkout(&git.CheckoutOptions{Keep: true, Branch: "test", Create: true})
+	if err != nil {
+		panic(err)
+	}
+
+	err = repository.Push(&git.PushOptions{
+		RemoteName: "origin",
+	})
+	if err != nil {
+		panic(err)
+	}
 
 	return 0
 }
