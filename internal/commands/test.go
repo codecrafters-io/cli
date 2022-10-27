@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/codecrafters-io/cli/internal/utils"
 	logstream_consumer "github.com/codecrafters-io/logstream/consumer"
 	"github.com/levigross/grequests"
 	cp "github.com/otiai10/copy"
@@ -51,11 +52,13 @@ func TestCommand() int {
 		return 1
 	}
 
-	// TODO: Pick repository name from remotes
-	repositoryName := strings.Split(repoDir, "/")[len(strings.Split(repoDir, "/"))-1]
-	fmt.Println(repositoryName)
+	codecraftersRemote, err := utils.IdentifyGitRemote(repoDir)
+	if err != nil {
+		fmt.Fprint(os.Stderr, err.Error())
+		return 1
+	}
 
-	createSubmissionResponse, err := createSubmission("https://app.staging.codecrafters.io", repositoryName, tempCommitSha)
+	createSubmissionResponse, err := createSubmission(codecraftersRemote.CodecraftersServerURL(), codecraftersRemote.CodecraftersRepositoryId(), tempCommitSha)
 	if err != nil {
 		return 1
 	}
@@ -63,9 +66,11 @@ func TestCommand() int {
 	if createSubmissionResponse.IsError {
 		fmt.Fprintf(os.Stderr, "failed to create submission: %s", createSubmissionResponse.ErrorMessage)
 		return 1
-	} else {
-		fmt.Println("submitted!")
-		fmt.Println(createSubmissionResponse.LogstreamUrl)
+	}
+
+	err = streamLogs(createSubmissionResponse.LogstreamUrl)
+	if err != nil {
+		return 1
 	}
 
 	return 0
