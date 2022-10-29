@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/codecrafters-io/cli/internal/utils"
 	logstream_consumer "github.com/codecrafters-io/logstream/consumer"
+	"github.com/fatih/color"
 	cp "github.com/otiai10/copy"
 	"io"
 	"io/ioutil"
@@ -16,11 +17,14 @@ import (
 )
 
 func TestCommand() int {
-	fmt.Println("Running tests on your code...")
-	fmt.Println("")
-
 	repoDir, err := getRepositoryDir()
 	if err != nil {
+		return 1
+	}
+
+	codecraftersRemote, err := utils.IdentifyGitRemote(repoDir)
+	if err != nil {
+		fmt.Fprint(os.Stderr, err.Error())
 		return 1
 	}
 
@@ -41,14 +45,11 @@ func TestCommand() int {
 		return 1
 	}
 
+	// Place this before the push so that it "feels" fast
+	fmt.Println("Running tests on your codebase. Streaming logs...")
+
 	err = pushBranchToRemote(tmpDir)
 	if err != nil {
-		return 1
-	}
-
-	codecraftersRemote, err := utils.IdentifyGitRemote(repoDir)
-	if err != nil {
-		fmt.Fprint(os.Stderr, err.Error())
 		return 1
 	}
 
@@ -64,9 +65,32 @@ func TestCommand() int {
 		return 1
 	}
 
+	fmt.Println("")
 	err = streamLogs(createSubmissionResponse.LogstreamUrl)
 	if err != nil {
 		return 1
+	}
+
+	fetchSubmissionResponse, err := codecraftersClient.FetchSubmission(createSubmissionResponse.Id)
+	if err != nil {
+		// TODO: Notify sentry
+		red := color.New(color.FgRed).SprintFunc()
+		fmt.Fprintln(os.Stderr, red(err.Error()))
+		fmt.Fprintln(os.Stderr, "")
+		fmt.Fprintln(os.Stderr, red("CodeCrafters has been notified of the above error."))
+		return 1
+	}
+
+	if fetchSubmissionResponse.Status == "failure" {
+		fmt.Println("")
+		fmt.Println(createSubmissionResponse.OnFailureMessage)
+		return 1
+	}
+
+	if fetchSubmissionResponse.Status == "success" {
+		fmt.Println("")
+		fmt.Println(createSubmissionResponse.OnSuccessMessage)
+		return 0
 	}
 
 	return 0

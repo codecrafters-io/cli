@@ -4,16 +4,19 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	retry "github.com/avast/retry-go"
 	"github.com/levigross/grequests"
 	"os"
+	"time"
 )
 
 type CreateSubmissionResponse struct {
-	ErrorMessage         string `json:"error_message"`
-	IsError              bool   `json:"is_error"`
-	LogstreamUrl         string `json:"logstream_url"`
-	OnTestsFailedMessage string `json:"on_tests_failed_message"`
-	OnTestsPassedMessage string `json:"on_tests_passed_message"`
+	Id               string `json:"id"`
+	ErrorMessage     string `json:"error_message"`
+	IsError          bool   `json:"is_error"`
+	LogstreamUrl     string `json:"logstream_url"`
+	OnFailureMessage string `json:"on_failure_message"`
+	OnSuccessMessage string `json:"on_success_message"`
 }
 
 type FetchSubmissionResponse struct {
@@ -57,4 +60,57 @@ func (c CodecraftersClient) CreateSubmission(repositoryId string, commitSha stri
 	}
 
 	return createSubmissionResponse, nil
+}
+
+func (c CodecraftersClient) FetchSubmission(submissionId string) (FetchSubmissionResponse, error) {
+	var fetchSubmissionResponse FetchSubmissionResponse
+
+	err := retry.Do(
+		func() error {
+			var err error
+			fetchSubmissionResponse, err = c.doFetchSubmission(submissionId)
+			if err != nil {
+				return err
+			}
+
+			if fetchSubmissionResponse.Status != "failure" && fetchSubmissionResponse.Status != "success" {
+				return fmt.Errorf("unexpected submission status: %s", fetchSubmissionResponse.Status)
+			}
+
+			return nil
+		},
+		retry.Attempts(5),
+		retry.DelayType(retry.BackOffDelay),
+		retry.MaxDelay(2*time.Second),
+		retry.Delay(500*time.Millisecond),
+		retry.LastErrorOnly(true),
+	)
+
+	if err != nil {
+		return FetchSubmissionResponse{}, err
+	}
+
+	return fetchSubmissionResponse, nil
+}
+
+func (c CodecraftersClient) doFetchSubmission(submissionId string) (FetchSubmissionResponse, error) {
+	// TODO: Include version in headers?
+	response, err := grequests.Get(fmt.Sprintf("%s/submissions/%s", c.ServerUrl, submissionId), &grequests.RequestOptions{})
+
+	if err != nil {
+		return FetchSubmissionResponse{}, fmt.Errorf("failed to fetch submission result from CodeCrafters: %s", err)
+	}
+
+	if !response.Ok {
+		return FetchSubmissionResponse{}, fmt.Errorf("failed to fetch submission result from CodeCrafters. status code: %d", response.StatusCode)
+	}
+
+	fetchSubmissionResponse := FetchSubmissionResponse{}
+
+	err = json.Unmarshal(response.Bytes(), &fetchSubmissionResponse)
+	if err != nil {
+		return FetchSubmissionResponse{}, fmt.Errorf("failed to fetch submission result from CodeCrafters: %s", err)
+	}
+
+	return fetchSubmissionResponse, nil
 }
