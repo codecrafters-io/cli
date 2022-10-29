@@ -77,7 +77,8 @@ func TestCommand() int {
 		red := color.New(color.FgRed).SprintFunc()
 		fmt.Fprintln(os.Stderr, red(err.Error()))
 		fmt.Fprintln(os.Stderr, "")
-		fmt.Fprintln(os.Stderr, red("CodeCrafters has been notified of the above error."))
+		fmt.Fprintln(os.Stderr, red("We couldn't fetch the results of your submission. Please try again?"))
+		fmt.Fprintln(os.Stderr, red("Let us know at hello@codecrafters.io if this error persists."))
 		return 1
 	}
 
