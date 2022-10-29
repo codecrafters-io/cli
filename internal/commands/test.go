@@ -1,12 +1,9 @@
 package commands
 
 import (
-	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/codecrafters-io/cli/internal/utils"
 	logstream_consumer "github.com/codecrafters-io/logstream/consumer"
-	"github.com/levigross/grequests"
 	cp "github.com/otiai10/copy"
 	"io"
 	"io/ioutil"
@@ -18,13 +15,10 @@ import (
 	"time"
 )
 
-type CreateSubmissionResponse struct {
-	ErrorMessage string `json:"error_message"`
-	IsError      bool   `json:"is_error"`
-	LogstreamUrl string `json:"logstream_url"`
-}
-
 func TestCommand() int {
+	fmt.Println("Running tests on your code...")
+	fmt.Println("")
+
 	repoDir, err := getRepositoryDir()
 	if err != nil {
 		return 1
@@ -58,7 +52,9 @@ func TestCommand() int {
 		return 1
 	}
 
-	createSubmissionResponse, err := createSubmission(codecraftersRemote.CodecraftersServerURL(), codecraftersRemote.CodecraftersRepositoryId(), tempCommitSha)
+	codecraftersClient := utils.NewCodecraftersClient(codecraftersRemote.CodecraftersServerURL())
+
+	createSubmissionResponse, err := codecraftersClient.CreateSubmission(codecraftersRemote.CodecraftersRepositoryId(), tempCommitSha)
 	if err != nil {
 		return 1
 	}
@@ -168,35 +164,6 @@ func pushBranchToRemote(tmpDir string) error {
 	}
 
 	return nil
-}
-
-func createSubmission(serverUrl string, repositoryId string, commitSha string) (CreateSubmissionResponse, error) {
-	// TODO: Include version in headers?
-	response, err := grequests.Post(serverUrl+"/submissions", &grequests.RequestOptions{JSON: map[string]interface{}{
-		"repository_id":       repositoryId,
-		"commit_sha":          commitSha,
-		"should_auto_advance": false,
-	}})
-
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "failed to submit code to CodeCrafters: %s", err)
-		return CreateSubmissionResponse{}, err
-	}
-
-	if !response.Ok && response.StatusCode != 403 {
-		fmt.Fprintf(os.Stderr, "failed to submit code to CodeCrafters. status code: %d. body: %s", response.StatusCode, response.String())
-		return CreateSubmissionResponse{}, errors.New("dummy")
-	}
-
-	createSubmissionResponse := CreateSubmissionResponse{}
-
-	err = json.Unmarshal(response.Bytes(), &createSubmissionResponse)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "failed to submit code to CodeCrafters: %s", err)
-		return CreateSubmissionResponse{}, err
-	}
-
-	return createSubmissionResponse, nil
 }
 
 func streamLogs(logstreamUrl string) error {
