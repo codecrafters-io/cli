@@ -7,6 +7,9 @@ import (
 	"os"
 )
 
+var version string
+var commit string
+
 // Usage: codecrafters test
 func main() {
 	flag.Usage = func() {
@@ -20,7 +23,7 @@ USAGE
 
 COMMANDS
   test:  run tests on project in current directory
-`, "0.0.1")
+`, fmt.Sprintf("%s (%s)", version, commit))
 
 	}
 
