@@ -2,7 +2,7 @@ builds:
 - env:
     - CGO_ENABLED=0
   main: ./cmd/codecrafters
-  ldflags: "-s -w -X utils.version={{.Version}} -X utils.commit={{.Commit}}"
+  ldflags: "-s -w -X github.com/codecrafters-io/cli/internal/utils.Version={{.Version}} -X github.com/codecrafters-io/cli/internal/utils.Commit={{.Commit}}"
 archives:
   - name_template: "{{ .Tag }}_{{ .Os }}_{{ .Arch }}"
     format: binary
