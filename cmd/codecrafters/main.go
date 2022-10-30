@@ -23,7 +23,7 @@ USAGE
 
 COMMANDS
   test:  run tests on project in current directory
-`, fmt.Sprintf("v%s (%s)", version, commit[:7]))
+`, fmt.Sprintf("v%s-%s", version, commit[:7]))
 
 	}
 
