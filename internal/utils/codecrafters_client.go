@@ -26,20 +26,30 @@ type FetchSubmissionResponse struct {
 }
 
 type CodecraftersClient struct {
-	ServerUrl string
+	ServerUrl  string
+	CLIVersion string
 }
 
-func NewCodecraftersClient(serverUrl string) CodecraftersClient {
-	return CodecraftersClient{ServerUrl: serverUrl}
+func NewCodecraftersClient(serverUrl string, cliVersion string) CodecraftersClient {
+	return CodecraftersClient{ServerUrl: serverUrl, CLIVersion: cliVersion}
+}
+
+func (c CodecraftersClient) headers() map[string]string {
+	return map[string]string{
+		"X-Codecrafters-CLI-Version": c.CLIVersion,
+	}
 }
 
 func (c CodecraftersClient) CreateSubmission(repositoryId string, commitSha string) (CreateSubmissionResponse, error) {
 	// TODO: Include version in headers?
-	response, err := grequests.Post(c.ServerUrl+"/submissions", &grequests.RequestOptions{JSON: map[string]interface{}{
-		"repository_id":       repositoryId,
-		"commit_sha":          commitSha,
-		"should_auto_advance": false,
-	}})
+	response, err := grequests.Post(c.ServerUrl+"/submissions", &grequests.RequestOptions{
+		JSON: map[string]interface{}{
+			"repository_id":       repositoryId,
+			"commit_sha":          commitSha,
+			"should_auto_advance": false,
+		},
+		Headers: c.headers(),
+	})
 
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "failed to submit code to CodeCrafters: %s", err)
@@ -95,7 +105,7 @@ func (c CodecraftersClient) FetchSubmission(submissionId string) (FetchSubmissio
 
 func (c CodecraftersClient) doFetchSubmission(submissionId string) (FetchSubmissionResponse, error) {
 	// TODO: Include version in headers?
-	response, err := grequests.Get(fmt.Sprintf("%s/submissions/%s", c.ServerUrl, submissionId), &grequests.RequestOptions{})
+	response, err := grequests.Get(fmt.Sprintf("%s/submissions/%s", c.ServerUrl, submissionId), &grequests.RequestOptions{Headers: c.headers()})
 
 	if err != nil {
 		return FetchSubmissionResponse{}, fmt.Errorf("failed to fetch submission result from CodeCrafters: %s", err)
