@@ -7,8 +7,8 @@ import (
 	"os"
 )
 
-var version string
-var commit string
+var version string = "0"
+var commit string = "unknown"
 
 // Usage: codecrafters test
 func main() {
