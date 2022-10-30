@@ -7,7 +7,7 @@ install:
 
 release:
 	git tag v$(next_version_number)
-	git push origin master v$(next_version_number)
+	git push origin main v$(next_version_number)
 
 test:
 	go test -v ./...
