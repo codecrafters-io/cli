@@ -3,6 +3,21 @@ builds:
     - CGO_ENABLED=0
   main: ./cmd/codecrafters
   ldflags: "-s -w -X github.com/codecrafters-io/cli/internal/utils.Version={{.Version}} -X github.com/codecrafters-io/cli/internal/utils.Commit={{.Commit}}"
+
 archives:
   - name_template: "{{ .Tag }}_{{ .Os }}_{{ .Arch }}"
     format: binary
+
+brews:
+  - tap:
+      owner: codecrafters-io
+      name: homebrew-tap
+    commit_author:
+      name: Paul Kuruvilla
+      email: paul@codecrafters.io
+    homepage: https://codecrafters.io.io
+    description: CodeCrafters CLI
+    license: MIT
+    # TODO: Add completions
+    install: |
+      bin.install "codecrafters"
