@@ -4,11 +4,9 @@ import (
 	"flag"
 	"fmt"
 	"github.com/codecrafters-io/cli/internal/commands"
+	"github.com/codecrafters-io/cli/internal/utils"
 	"os"
 )
-
-var version string = "0"
-var commit string = "unknown"
 
 // Usage: codecrafters test
 func main() {
@@ -23,7 +21,7 @@ USAGE
 
 COMMANDS
   test:  run tests on project in current directory
-`, fmt.Sprintf("v%s-%s", version, commit[:7]))
+`, utils.VersionString())
 
 	}
 

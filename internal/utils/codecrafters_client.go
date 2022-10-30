@@ -26,17 +26,16 @@ type FetchSubmissionResponse struct {
 }
 
 type CodecraftersClient struct {
-	ServerUrl  string
-	CLIVersion string
+	ServerUrl string
 }
 
-func NewCodecraftersClient(serverUrl string, cliVersion string) CodecraftersClient {
-	return CodecraftersClient{ServerUrl: serverUrl, CLIVersion: cliVersion}
+func NewCodecraftersClient(serverUrl string) CodecraftersClient {
+	return CodecraftersClient{ServerUrl: serverUrl}
 }
 
 func (c CodecraftersClient) headers() map[string]string {
 	return map[string]string{
-		"X-Codecrafters-CLI-Version": c.CLIVersion,
+		"X-Codecrafters-CLI-Version": VersionString(),
 	}
 }
 
