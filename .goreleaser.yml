@@ -9,7 +9,8 @@ archives:
     format: binary
 
 brews:
-  - tap:
+  - name: codecrafters
+    tap:
       owner: codecrafters-io
       name: homebrew-tap
     commit_author:
