@@ -12,7 +12,7 @@ brews:
   - name: codecrafters
     tap:
       owner: codecrafters-io
-      name: homebrew-tap
+      name: homebrew-codecrafters-cli
     commit_author:
       name: Paul Kuruvilla
       email: paul@codecrafters.io
