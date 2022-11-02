@@ -6,7 +6,6 @@ builds:
 
 archives:
   - name_template: "{{ .Tag }}_{{ .Os }}_{{ .Arch }}"
-    format: binary
 
 brews:
   - name: codecrafters
