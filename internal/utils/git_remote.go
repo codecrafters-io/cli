@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"os/exec"
 	"regexp"
 	"strings"
@@ -47,10 +48,10 @@ type NoCodecraftersRemoteFoundError struct {
 func (e NoCodecraftersRemoteFoundError) Error() string {
 	remoteUrls := []string{}
 	for _, remote := range e.Remotes {
-		remoteUrls = append(remoteUrls, remote.Name)
+		remoteUrls = append(remoteUrls, remote.Url)
 	}
 
-	return "No CodeCrafters git remotes found. Available remotes: " + strings.Join(remoteUrls, ", ")
+	return fmt.Sprintf("No CodeCrafters git remotes found. Available remotes: %s\nPlease run this command from within your CodeCrafters Git repository." + strings.Join(remoteUrls, ", "))
 }
 
 type MultipleCodecraftersRemotesFoundError struct {
@@ -60,7 +61,7 @@ type MultipleCodecraftersRemotesFoundError struct {
 func (e MultipleCodecraftersRemotesFoundError) Error() string {
 	remoteUrls := []string{}
 	for _, remote := range e.Remotes {
-		remoteUrls = append(remoteUrls, remote.Name)
+		remoteUrls = append(remoteUrls, remote.Url)
 	}
 
 	return "Multiple CodeCrafters git remotes found: " + strings.Join(remoteUrls, ", ")
