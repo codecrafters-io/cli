@@ -26,10 +26,16 @@ COMMANDS
 	}
 
 	help := flag.Bool("help", false, "show usage instructions")
+	showVersion := flag.Bool("version", false, "print version and exit")
 	flag.Parse()
 
 	if *help {
 		flag.Usage()
+		os.Exit(0)
+	}
+
+	if *showVersion {
+		fmt.Println(fmt.Sprintf("codecrafters %s", utils.VersionString()))
 		os.Exit(0)
 	}
 
