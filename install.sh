@@ -36,9 +36,9 @@ if [ -z ${INSTALL_PATH+x} ]; then
 fi
 
 DOWNLOAD_URL="https://github.com/codecrafters-io/cli/releases/download/${VERSION}/${VERSION}_${OS}_${ARCH}.tar.gz"
-echo $DOWNLOAD_URL
 
 echo "This script will automatically install codecrafters (${VERSION}) for you."
+echo "You will be prompted for your password by sudo."
 echo "Installation path: ${INSTALL_PATH}"
 if [ "x$(id -u)" == "x0" ]; then
   echo "Warning: this script is currently running as root. This is dangerous. "
