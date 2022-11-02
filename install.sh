@@ -2,7 +2,7 @@
 set -eu
 
 # allow overriding the version
-VERSION=${SENTRY_CLI_VERSION:-v15}
+VERSION=${SENTRY_CLI_VERSION:-v16}
 
 PLATFORM=`uname -s`
 ARCH=`uname -m`
