@@ -3,14 +3,13 @@ next_version_number := $(shell echo $$(($(current_version_number)+1)))
 
 
 install:
-	go build -o $$GOPATH/bin/codecrafters cmd/codecrafters/main.go
+	sudo go build -o /usr/local/bin/codecrafters cmd/codecrafters/main.go
 
 uninstall:
-	rm $$GOPATH/bin/codecrafters
+	sudo rm /usr/local/bin/codecrafters
 
 install_latest_from_github:
 	curl -Lo $$GOPATH/bin/codecrafters https://github.com/codecrafters-io/cli/releases/download/v$(current_version_number)/v$(current_version_number)_darwin_arm64
-
 
 release:
 	git tag v$(next_version_number)
