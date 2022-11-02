@@ -51,7 +51,7 @@ func (e NoCodecraftersRemoteFoundError) Error() string {
 		remoteUrls = append(remoteUrls, remote.Url)
 	}
 
-	return fmt.Sprintf("No CodeCrafters git remotes found. Available remotes: %s\nPlease run this command from within your CodeCrafters Git repository." + strings.Join(remoteUrls, ", "))
+	return fmt.Sprintf("No CodeCrafters git remotes found. Available remotes: %s\nPlease run this command from within your CodeCrafters Git repository.", strings.Join(remoteUrls, ", "))
 }
 
 type MultipleCodecraftersRemotesFoundError struct {
