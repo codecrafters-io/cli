@@ -7,6 +7,7 @@ require (
 	github.com/codecrafters-io/logstream v0.0.0-20221026224152-2d9b2ed6d71c
 	github.com/fatih/color v1.13.0
 	github.com/levigross/grequests v0.0.0-20190908174114-253788527a1a
+	github.com/mitchellh/go-wordwrap v1.0.1
 	github.com/otiai10/copy v1.7.0
 	github.com/stretchr/testify v1.5.1
 )

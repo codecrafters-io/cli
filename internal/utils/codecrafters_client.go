@@ -11,12 +11,14 @@ import (
 )
 
 type CreateSubmissionResponse struct {
-	Id               string `json:"id"`
-	ErrorMessage     string `json:"error_message"`
-	IsError          bool   `json:"is_error"`
-	LogstreamUrl     string `json:"logstream_url"`
-	OnFailureMessage string `json:"on_failure_message"`
-	OnSuccessMessage string `json:"on_success_message"`
+	Id                   string `json:"id"`
+	ErrorMessage         string `json:"error_message"`
+	IsError              bool   `json:"is_error"`
+	LogstreamUrl         string `json:"logstream_url"`
+	OnFailureMessage     string `json:"on_failure_message"`
+	OnSuccessMessage     string `json:"on_success_message"`
+	OnInitSuccessMessage string `json:"on_init_success_message"`
+	OnInitWarningMessage string `json:"on_init_warning_message"`
 }
 
 type FetchSubmissionResponse struct {

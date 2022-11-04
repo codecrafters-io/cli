@@ -5,6 +5,7 @@ import (
 	"github.com/codecrafters-io/cli/internal/utils"
 	logstream_consumer "github.com/codecrafters-io/logstream/consumer"
 	"github.com/fatih/color"
+	wordwrap "github.com/mitchellh/go-wordwrap"
 	cp "github.com/otiai10/copy"
 	"io"
 	"io/ioutil"
@@ -63,6 +64,24 @@ func TestCommand() int {
 	if createSubmissionResponse.IsError {
 		fmt.Fprintf(os.Stderr, "failed to create submission: %s", createSubmissionResponse.ErrorMessage)
 		return 1
+	}
+
+	if createSubmissionResponse.OnInitSuccessMessage != "" {
+		fmt.Println("")
+
+		wrapped := wordwrap.WrapString(createSubmissionResponse.OnInitSuccessMessage, 79)
+		for _, line := range strings.Split(wrapped, "\n") {
+			fmt.Println(fmt.Sprintf("\033[1;92m%s\033[0m", line))
+		}
+	}
+
+	if createSubmissionResponse.OnInitWarningMessage != "" {
+		fmt.Println("")
+
+		wrapped := wordwrap.WrapString(createSubmissionResponse.OnInitWarningMessage, 79)
+		for _, line := range strings.Split(wrapped, "\n") {
+			fmt.Println(fmt.Sprintf("\033[31m%s\033[0m", line))
+		}
 	}
 
 	fmt.Println("")
