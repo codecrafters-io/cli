@@ -68,8 +68,10 @@ fi
 
 tar xzf "$TEMP_FILE" -C "$TEMP_FOLDER" codecrafters
 
-install "$TEMP_FOLDER/codecrafters" "$INSTALL_PATH" ||
-  sudo install "$TEMP_FOLDER/codecrafters" "$INSTALL_PATH" &&
-  echo "Installed $("$INSTALL_PATH" --version)"
+if ! install "$TEMP_FOLDER/codecrafters" "$INSTALL_PATH" 2>/dev/null; then
+  sudo -k install "$TEMP_FOLDER/codecrafters" "$INSTALL_PATH"
+fi
+
+echo "Installed $("$INSTALL_PATH" --version)"
 
 echo 'Done!'
