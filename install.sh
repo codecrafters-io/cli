@@ -68,10 +68,8 @@ fi
 
 tar xzf "$TEMP_FILE" -C "$TEMP_FOLDER" codecrafters
 
-chmod 0755 "$TEMP_FOLDER/codecrafters"
-
-mv "$TEMP_FOLDER/codecrafters" "$INSTALL_PATH" ||
-  sudo mv "$TEMP_FOLDER/codecrafters" "$INSTALL_PATH" &&
+install "$TEMP_FOLDER/codecrafters" "$INSTALL_PATH" ||
+  sudo install "$TEMP_FOLDER/codecrafters" "$INSTALL_PATH" &&
   echo "Installed $("$INSTALL_PATH" --version)"
 
 echo 'Done!'
