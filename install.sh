@@ -58,7 +58,7 @@ cleanup() {
 
 trap cleanup EXIT
 
-echo Downloading the archive...
+echo Downloading CodeCrafters CLI...
 
 HTTP_CODE=$(curl -SL --progress-bar "$DOWNLOAD_URL" --output "$TEMP_FILE" --write-out "%{http_code}")
 if [ "$HTTP_CODE" -lt 200 ] || [ "$HTTP_CODE" -gt 299 ]; then
@@ -68,8 +68,10 @@ fi
 
 tar xzf "$TEMP_FILE" -C "$TEMP_FOLDER" codecrafters
 
-if ! install "$TEMP_FOLDER/codecrafters" "$INSTALL_PATH" 2>/dev/null; then
-  sudo -k install "$TEMP_FOLDER/codecrafters" "$INSTALL_PATH"
+chmod 0755 "$TEMP_FOLDER/codecrafters"
+
+if ! mv "$TEMP_FOLDER/codecrafters" "$INSTALL_PATH" 2> /dev/null; then
+  sudo -k mv "$TEMP_FOLDER/codecrafters" "$INSTALL_PATH"
 fi
 
 echo "Installed $("$INSTALL_PATH" --version)"
