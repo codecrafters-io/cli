@@ -8,9 +8,9 @@ VERSION=${SENTRY_CLI_VERSION:-v19}
 PLATFORM=`uname -s`
 ARCH=`uname -m`
 
-if [ "$PLATFORM" = "Darwin" ]; then
+if [[ "$PLATFORM" = "Darwin" ]]; then
   OS=darwin
-elif [ "${PLATFORM%% *}" = "Linux" ]; then
+elif [[ "${PLATFORM%% *}" = "Linux" ]]; then
   OS=linux
 else
   echo "This installer is only supported on Linux and MacOS."
