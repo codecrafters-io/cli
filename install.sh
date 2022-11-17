@@ -1,4 +1,5 @@
-#!/usr/bin/env bash
+#!/bin/sh
+
 set -eu
 
 # allow overriding the version
@@ -7,45 +8,43 @@ VERSION=${SENTRY_CLI_VERSION:-v19}
 PLATFORM=`uname -s`
 ARCH=`uname -m`
 
-if [ "$PLATFORM" == "Darwin" ]; then
+if [ "$PLATFORM" = "Darwin" ]; then
   OS=darwin
-elif [ "$(expr substr "$PLATFORM" 1 5)" == "Linux" ]; then
+elif [ "${PLATFORM%% *}" = "Linux" ]; then
   OS=linux
 else
   echo "This installer is only supported on Linux and MacOS."
   exit 1
 fi
 
-if [ "$ARCH" == "x86_64" ]; then
-  ARCH=amd64
-elif [[ $ARCH == armv8* ]] || [[ $ARCH == arm64* ]] || [[ $ARCH == aarch64* ]]; then
-  ARCH=arm64
-else
-  echo "unsupported arch: $ARCH"
-  exit 1
-fi
+case "$ARCH" in
+  x86_64)
+    ARCH=amd64
+    ;;
+  armv8* | arm64* | aarch64* )
+    ARCH=arm64
+    ;;
+  *)
+    echo "unsupported arch: $ARCH"
+    exit 1
+    ;;
+esac
 
-
-# If the install directory is not set, set it to a default
-if [ -z ${INSTALL_DIR+x} ]; then
-  INSTALL_DIR=/usr/local/bin
-fi
-
-if [ -z ${INSTALL_PATH+x} ]; then
-  INSTALL_PATH="${INSTALL_DIR}/codecrafters"
-fi
+INSTALL_DIR=${INSTALL_DIR:-/usr/local/bin}
+INSTALL_PATH=${INSTALL_PATH:-$INSTALL_DIR/codecrafters}
 
 DOWNLOAD_URL="https://github.com/codecrafters-io/cli/releases/download/${VERSION}/${VERSION}_${OS}_${ARCH}.tar.gz"
 
 echo "This script will automatically install codecrafters (${VERSION}) for you."
-echo "You will be prompted for your password by sudo."
+echo "You will be prompted for your password by sudo if needed."
 echo "Installation path: ${INSTALL_PATH}"
-if [ "x$(id -u)" == "x0" ]; then
+
+if [ "$(id -u)" = "0" ]; then
   echo "Warning: this script is currently running as root. This is dangerous. "
   echo "         Instead run it as normal user. We will sudo as needed."
 fi
 
-if ! hash curl 2> /dev/null; then
+if ! command -v curl >/dev/null; then
   echo "error: you do not have 'curl' installed which is required for this script."
   exit 1
 fi
@@ -59,15 +58,19 @@ cleanup() {
 }
 
 trap cleanup EXIT
+
+echo Downloading CodeCrafters CLI...
+
 HTTP_CODE=$(curl -SL --progress-bar "$DOWNLOAD_URL" --output "$TEMP_FILE" --write-out "%{http_code}")
-if [[ ${HTTP_CODE} -lt 200 || ${HTTP_CODE} -gt 299 ]]; then
+if [ "$HTTP_CODE" -lt 200 ] || [ "$HTTP_CODE" -gt 299 ]; then
   echo "error: your platform and architecture (${PLATFORM}-${ARCH}) is unsupported."
   exit 1
 fi
 
-tar xzf "$TEMP_FILE" -C "$TEMP_FOLDER"
+tar xzf "$TEMP_FILE" -C "$TEMP_FOLDER" codecrafters
 
 chmod 0755 "$TEMP_FOLDER/codecrafters"
+
 if ! mv "$TEMP_FOLDER/codecrafters" "$INSTALL_PATH" 2> /dev/null; then
   sudo -k mv "$TEMP_FOLDER/codecrafters" "$INSTALL_PATH"
 fi
