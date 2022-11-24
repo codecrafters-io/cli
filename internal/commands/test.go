@@ -203,7 +203,18 @@ func commitChanges(tmpDir string, commitMessage string) (string, error) {
 		return "", errors.New("test sentry error")
 	}
 
-	outputBytes, err := exec.Command("git", "-C", tmpDir, "commit", "--allow-empty", "-a", "-m", commitMessage).CombinedOutput()
+	outputBytes, err := exec.Command("git", "-C", tmpDir, "add", ".").CombinedOutput()
+	if err != nil {
+		if _, ok := err.(*exec.ExitError); ok {
+			fmt.Fprintf(os.Stderr, "failed to add all files: %s", outputBytes)
+			return "", err
+		} else {
+			fmt.Fprintf(os.Stderr, "failed to add all files: %s", err)
+			return "", err
+		}
+	}
+
+	outputBytes, err = exec.Command("git", "-C", tmpDir, "commit", "--allow-empty", "-a", "-m", commitMessage).CombinedOutput()
 	if err != nil {
 		if _, ok := err.(*exec.ExitError); ok {
 			fmt.Fprintf(os.Stderr, "failed to create temp commit: %s", outputBytes)
