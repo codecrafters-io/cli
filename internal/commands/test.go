@@ -1,12 +1,8 @@
 package commands
 
 import (
+	"errors"
 	"fmt"
-	"github.com/codecrafters-io/cli/internal/utils"
-	logstream_consumer "github.com/codecrafters-io/logstream/consumer"
-	"github.com/fatih/color"
-	wordwrap "github.com/mitchellh/go-wordwrap"
-	cp "github.com/otiai10/copy"
 	"io"
 	"io/ioutil"
 	"os"
@@ -15,35 +11,62 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/codecrafters-io/cli/internal/utils"
+	logstream_consumer "github.com/codecrafters-io/logstream/consumer"
+	"github.com/fatih/color"
+	"github.com/getsentry/sentry-go"
+	wordwrap "github.com/mitchellh/go-wordwrap"
+	cp "github.com/otiai10/copy"
 )
 
-func TestCommand() int {
-	repoDir, err := getRepositoryDir()
+func TestCommand() (err error) {
+	defer func() {
+		if p := recover(); p != nil {
+			sentry.CurrentHub().Recover(p)
+
+			panic(p)
+		}
+
+		if err == nil {
+			return
+		}
+
+		var noRepo utils.NoCodecraftersRemoteFoundError
+		if errors.Is(err, &noRepo) {
+			// ignore
+			return
+		}
+
+		sentry.CurrentHub().CaptureException(err)
+	}()
+
+	repoDir, err := GetRepositoryDir()
 	if err != nil {
-		return 1
+		return err
 	}
 
 	codecraftersRemote, err := utils.IdentifyGitRemote(repoDir)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err.Error())
-		return 1
+		return err
 	}
 
 	tmpDir, err := copyRepositoryDirToTempDir(repoDir)
 	if err != nil {
-		return 1
+		return err
 	}
 
 	tempBranchName := "cli-test-" + strconv.FormatInt(time.Now().UnixMilli(), 10)
 
 	err = checkoutNewBranch(tempBranchName, tmpDir)
 	if err != nil {
-		return 1
+		return err
 	}
 
 	tempCommitSha, err := commitChanges(tmpDir, fmt.Sprintf("CLI tests (%s)", tempBranchName))
 	if err != nil {
-		return 1
+		return err
 	}
 
 	// Place this before the push so that it "feels" fast
@@ -51,19 +74,19 @@ func TestCommand() int {
 
 	err = pushBranchToRemote(tmpDir)
 	if err != nil {
-		return 1
+		return err
 	}
 
 	codecraftersClient := utils.NewCodecraftersClient(codecraftersRemote.CodecraftersServerURL())
 
 	createSubmissionResponse, err := codecraftersClient.CreateSubmission(codecraftersRemote.CodecraftersRepositoryId(), tempCommitSha)
 	if err != nil {
-		return 1
+		return err
 	}
 
 	if createSubmissionResponse.IsError {
 		fmt.Fprintf(os.Stderr, "failed to create submission: %s", createSubmissionResponse.ErrorMessage)
-		return 1
+		return err
 	}
 
 	if createSubmissionResponse.OnInitSuccessMessage != "" {
@@ -87,7 +110,7 @@ func TestCommand() int {
 	fmt.Println("")
 	err = streamLogs(createSubmissionResponse.LogstreamUrl)
 	if err != nil {
-		return 1
+		return err
 	}
 
 	fetchSubmissionResponse, err := codecraftersClient.FetchSubmission(createSubmissionResponse.Id)
@@ -98,25 +121,25 @@ func TestCommand() int {
 		fmt.Fprintln(os.Stderr, "")
 		fmt.Fprintln(os.Stderr, red("We couldn't fetch the results of your submission. Please try again?"))
 		fmt.Fprintln(os.Stderr, red("Let us know at hello@codecrafters.io if this error persists."))
-		return 1
+		return err
 	}
 
 	if fetchSubmissionResponse.Status == "failure" {
 		fmt.Println("")
 		fmt.Println(createSubmissionResponse.OnFailureMessage)
-		return 1
+		return err
 	}
 
 	if fetchSubmissionResponse.Status == "success" {
 		fmt.Println("")
 		fmt.Println(createSubmissionResponse.OnSuccessMessage)
-		return 0
+		return nil
 	}
 
-	return 0
+	return nil
 }
 
-func getRepositoryDir() (string, error) {
+func GetRepositoryDir() (string, error) {
 	dir, err := os.Getwd()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "failed to fetch current working directory: %s", err)
@@ -169,6 +192,17 @@ func checkoutNewBranch(tempBranchName string, tmpDir string) error {
 }
 
 func commitChanges(tmpDir string, commitMessage string) (string, error) {
+	// This is statically injected failure.
+	// Set SENTRY_DEBUG_FAULT=commitChanges to produce error here.
+	// Or set SENTRY_DEBUG_FAULT=commitChanges=panic to produce panic.
+	if v, ok := os.LookupEnv("SENTRY_DEBUG_FAULT"); ok && strings.HasPrefix(v, "commitChanges") {
+		if _, r, _ := strings.Cut(v, "="); r == "panic" {
+			panic("test sentry panic")
+		}
+
+		return "", errors.New("test sentry error")
+	}
+
 	outputBytes, err := exec.Command("git", "-C", tmpDir, "commit", "--allow-empty", "-a", "-m", commitMessage).CombinedOutput()
 	if err != nil {
 		if _, ok := err.(*exec.ExitError); ok {
