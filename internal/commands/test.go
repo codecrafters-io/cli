@@ -192,7 +192,10 @@ func checkoutNewBranch(tempBranchName string, tmpDir string) error {
 }
 
 func commitChanges(tmpDir string, commitMessage string) (string, error) {
-	if v, ok := os.LookupEnv("SENTRY_DEBUG_FAIL"); ok && strings.HasPrefix(v, "commitChanges") {
+	// This is statically injected failure.
+	// Set SENTRY_DEBUG_FAULT=commitChanges to produce error here.
+	// Or set SENTRY_DEBUG_FAULT=commitChanges=panic to produce panic.
+	if v, ok := os.LookupEnv("SENTRY_DEBUG_FAULT"); ok && strings.HasPrefix(v, "commitChanges") {
 		if _, r, _ := strings.Cut(v, "="); r == "panic" {
 			panic("test sentry panic")
 		}
