@@ -152,16 +152,17 @@ func TestCommand(ctx context.Context) (err error) {
 
 	logger.Debug().Interface("response", createSubmissionResponse).Msg("submission fetched")
 
-	if fetchSubmissionResponse.Status == "failure" {
-		fmt.Println("")
+	fmt.Println("")
+
+	switch fetchSubmissionResponse.Status {
+	case "failure":
 		fmt.Println(createSubmissionResponse.OnFailureMessage)
-		return fmt.Errorf("%s", fetchSubmissionResponse.ErrorMessage)
+	case "success":
+		fmt.Println(createSubmissionResponse.OnSuccessMessage)
 	}
 
-	if fetchSubmissionResponse.Status == "success" {
-		fmt.Println("")
-		fmt.Println(createSubmissionResponse.OnSuccessMessage)
-		return nil
+	if fetchSubmissionResponse.IsError {
+		return fmt.Errorf("%s", fetchSubmissionResponse.ErrorMessage)
 	}
 
 	return nil

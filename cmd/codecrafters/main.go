@@ -79,7 +79,7 @@ func run() error {
 	var err error
 	cmd := flag.Arg(0)
 
-	logger = logger.With().Str("command", cmd).Logger()
+	logger.Debug().Str("command", cmd).Msg("command")
 
 	ctx = logger.WithContext(ctx)
 
