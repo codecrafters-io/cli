@@ -1,15 +1,19 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"time"
 
 	"github.com/codecrafters-io/cli/internal/commands"
 	"github.com/codecrafters-io/cli/internal/utils"
 	"github.com/getsentry/sentry-go"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 )
 
 var defaultSentryDSN = "https://f96f875b76304994aed1827378054427@o294739.ingest.sentry.io/4504174762065920"
@@ -47,6 +51,7 @@ COMMANDS
 
 	err := run()
 	if err != nil {
+		fmt.Fprintf(os.Stderr, "codecrafters: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -67,21 +72,70 @@ func run() error {
 		defer sentry.Flush(time.Second)
 	}
 
+	ctx := context.Background()
+
+	logger := newLogger()
+
+	var err error
 	cmd := flag.Arg(0)
+
+	logger = logger.With().Str("command", cmd).Logger()
+
+	ctx = logger.WithContext(ctx)
 
 	switch cmd {
 	case "test":
-		return commands.TestCommand()
-	case "": // no argument
+		err = commands.TestCommand(ctx)
+	case "help",
+		"": // no argument
 		flag.Usage()
 	default:
-		fmt.Fprintf(os.Stderr, "Unknown command: \"%s\". Did you mean to run \"codecrafters test\"?\n", cmd)
-		fmt.Fprintf(os.Stderr, "Error: Run codecrafters help for a list of available commands.\n")
+		log.Error().Str("command", cmd).Msgf("Unknown command. Did you mean to run \"codecrafters test\"?")
+		log.Info().Msg("Run codecrafters help for a list of available commands.")
 
 		return errors.New("bad usage")
 	}
 
+	if err != nil {
+		return fmt.Errorf("%v: %w", cmd, err)
+	}
+
 	return nil
+}
+
+func newLogger() zerolog.Logger {
+	zerolog.TimeFieldFormat = time.RFC3339Nano
+
+	var logWriter io.Writer
+
+	switch logFmt := os.Getenv("CODECRAFTERS_LOG_FORMAT"); logFmt {
+	case "pretty":
+		logWriter = zerolog.NewConsoleWriter(func(w *zerolog.ConsoleWriter) {
+			w.TimeFormat = "15:04:05.000"
+
+			w.FormatMessage = func(x interface{}) string {
+				return fmt.Sprintf("%-20s", x)
+			}
+		})
+	default:
+		fallthrough
+	case "json":
+		logWriter = os.Stderr
+	}
+
+	logger := zerolog.New(logWriter).With().Timestamp().Logger()
+	logger = logger.Level(zerolog.InfoLevel)
+
+	if q := os.Getenv("CODECRAFTERS_LOG_LEVEL"); q != "" {
+		lvl, err := zerolog.ParseLevel(q)
+		if err == nil {
+			logger = logger.Level(lvl)
+		} else {
+			logger.Warn().Err(err).Msg("parse log level")
+		}
+	}
+
+	return logger
 }
 
 func addRemoteURL(ev *sentry.Event, hint *sentry.EventHint) *sentry.Event {
