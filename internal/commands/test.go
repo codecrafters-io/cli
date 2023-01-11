@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -18,11 +19,20 @@ import (
 	"github.com/getsentry/sentry-go"
 	wordwrap "github.com/mitchellh/go-wordwrap"
 	cp "github.com/otiai10/copy"
+	"github.com/rs/zerolog"
 )
 
-func TestCommand() (err error) {
+func TestCommand(ctx context.Context) (err error) {
+	logger := zerolog.Ctx(ctx)
+
+	logger.Debug().Msg("start command")
+	defer func() {
+		logger.Debug().Err(err).Msg("end command")
+	}()
+
 	defer func() {
 		if p := recover(); p != nil {
+			logger.Panic().Str("panic", fmt.Sprintf("%v", p)).Stack().Msg("panic")
 			sentry.CurrentHub().Recover(p)
 
 			panic(p)
@@ -41,53 +51,65 @@ func TestCommand() (err error) {
 		sentry.CurrentHub().CaptureException(err)
 	}()
 
+	logger.Debug().Msg("get repo root")
+
 	repoDir, err := GetRepositoryDir()
 	if err != nil {
-		return err
+		return fmt.Errorf("find repository root folder: %w", err)
 	}
+
+	logger.Debug().Msg("find remotes")
 
 	codecraftersRemote, err := utils.IdentifyGitRemote(repoDir)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err.Error())
-		return err
+		return fmt.Errorf("find codecrafters repository url: %w", err)
 	}
+
+	logger.Debug().Msg("copy repo")
 
 	tmpDir, err := copyRepositoryDirToTempDir(repoDir)
 	if err != nil {
-		return err
+		return fmt.Errorf("make a repo temp copy: %w", err)
 	}
 
 	tempBranchName := "cli-test-" + strconv.FormatInt(time.Now().UnixMilli(), 10)
 
+	logger.Debug().Msg("create temp branch")
+
 	err = checkoutNewBranch(tempBranchName, tmpDir)
 	if err != nil {
-		return err
+		return fmt.Errorf("create temp branch: %w", err)
 	}
+
+	logger.Debug().Msg("commit changes")
 
 	tempCommitSha, err := commitChanges(tmpDir, fmt.Sprintf("CLI tests (%s)", tempBranchName))
 	if err != nil {
-		return err
+		return fmt.Errorf("commit changes: %w", err)
 	}
 
 	// Place this before the push so that it "feels" fast
 	fmt.Println("Running tests on your codebase. Streaming logs...")
 
+	logger.Debug().Msg("push changes")
+
 	err = pushBranchToRemote(tmpDir)
 	if err != nil {
-		return err
+		return fmt.Errorf("push changes: %w", err)
 	}
+
+	logger.Debug().Msg("create codecrafters client")
 
 	codecraftersClient := utils.NewCodecraftersClient(codecraftersRemote.CodecraftersServerURL())
 
+	logger.Debug().Msg("create submission")
+
 	createSubmissionResponse, err := codecraftersClient.CreateSubmission(codecraftersRemote.CodecraftersRepositoryId(), tempCommitSha)
 	if err != nil {
-		return err
+		return fmt.Errorf("create submission: %w", err)
 	}
 
-	if createSubmissionResponse.IsError {
-		fmt.Fprintf(os.Stderr, "failed to create submission: %s", createSubmissionResponse.ErrorMessage)
-		return err
-	}
+	logger.Debug().Interface("response", createSubmissionResponse).Msg("submission created")
 
 	if createSubmissionResponse.OnInitSuccessMessage != "" {
 		fmt.Println("")
@@ -107,11 +129,15 @@ func TestCommand() (err error) {
 		}
 	}
 
+	logger.Debug().Msg("stream logs")
+
 	fmt.Println("")
 	err = streamLogs(createSubmissionResponse.LogstreamUrl)
 	if err != nil {
-		return err
+		return fmt.Errorf("stream logs: %w", err)
 	}
+
+	logger.Debug().Msg("fetch submission")
 
 	fetchSubmissionResponse, err := codecraftersClient.FetchSubmission(createSubmissionResponse.Id)
 	if err != nil {
@@ -124,16 +150,19 @@ func TestCommand() (err error) {
 		return err
 	}
 
-	if fetchSubmissionResponse.Status == "failure" {
-		fmt.Println("")
+	logger.Debug().Interface("response", createSubmissionResponse).Msg("submission fetched")
+
+	fmt.Println("")
+
+	switch fetchSubmissionResponse.Status {
+	case "failure":
 		fmt.Println(createSubmissionResponse.OnFailureMessage)
-		return err
+	case "success":
+		fmt.Println(createSubmissionResponse.OnSuccessMessage)
 	}
 
-	if fetchSubmissionResponse.Status == "success" {
-		fmt.Println("")
-		fmt.Println(createSubmissionResponse.OnSuccessMessage)
-		return nil
+	if fetchSubmissionResponse.IsError {
+		return fmt.Errorf("%s", fetchSubmissionResponse.ErrorMessage)
 	}
 
 	return nil
@@ -142,8 +171,7 @@ func TestCommand() (err error) {
 func GetRepositoryDir() (string, error) {
 	dir, err := os.Getwd()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "failed to fetch current working directory: %s", err)
-		return "", err
+		return "", fmt.Errorf("get workdir: %w", err)
 	}
 
 	outputBytes, err := exec.Command("git", "-C", dir, "rev-parse", "--show-toplevel").CombinedOutput()
@@ -152,14 +180,12 @@ func GetRepositoryDir() (string, error) {
 			if regexp.MustCompile("not a git repository").Match(outputBytes) {
 				fmt.Fprintf(os.Stderr, "The current directory is not within a Git repository.\n")
 				fmt.Fprintf(os.Stderr, "Please run this command from within your CodeCrafters Git repository.\n")
-			} else {
-				fmt.Fprintln(os.Stderr, string(outputBytes))
-			}
 
-			return "", err
-		} else {
-			panic(err)
+				return "", errors.New("used not in a repository")
+			}
 		}
+
+		return "", wrapError(err, outputBytes, "run git command")
 	}
 
 	return strings.TrimSpace(string(outputBytes)), nil
@@ -168,24 +194,21 @@ func GetRepositoryDir() (string, error) {
 func copyRepositoryDirToTempDir(repoDir string) (string, error) {
 	tmpDir, err := ioutil.TempDir("", "codecrafters")
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "failed to create temporary directory: %s", err)
-		return "", err
+		return "", fmt.Errorf("create temp dir: %w", err)
 	}
 
 	err = cp.Copy(repoDir, tmpDir)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "failed to copy to temporary directory: %s", err)
-		return "", err
+		return "", fmt.Errorf("copy files: %w", err)
 	}
 
 	return tmpDir, nil
 }
 
 func checkoutNewBranch(tempBranchName string, tmpDir string) error {
-	err := exec.Command("git", "-C", tmpDir, "checkout", "-b", tempBranchName).Run()
+	outputBytes, err := exec.Command("git", "-C", tmpDir, "checkout", "-b", tempBranchName).CombinedOutput()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "failed to create temp branch: %s", err)
-		return err
+		return wrapError(err, outputBytes, "run git command")
 	}
 
 	return nil
@@ -205,35 +228,17 @@ func commitChanges(tmpDir string, commitMessage string) (string, error) {
 
 	outputBytes, err := exec.Command("git", "-C", tmpDir, "add", ".").CombinedOutput()
 	if err != nil {
-		if _, ok := err.(*exec.ExitError); ok {
-			fmt.Fprintf(os.Stderr, "failed to add all files: %s", outputBytes)
-			return "", err
-		} else {
-			fmt.Fprintf(os.Stderr, "failed to add all files: %s", err)
-			return "", err
-		}
+		return "", wrapError(err, outputBytes, "add all files")
 	}
 
 	outputBytes, err = exec.Command("git", "-C", tmpDir, "commit", "--allow-empty", "-a", "-m", commitMessage).CombinedOutput()
 	if err != nil {
-		if _, ok := err.(*exec.ExitError); ok {
-			fmt.Fprintf(os.Stderr, "failed to create temp commit: %s", outputBytes)
-			return "", err
-		} else {
-			fmt.Fprintf(os.Stderr, "failed to create temp commit: %s", err)
-			return "", err
-		}
+		return "", wrapError(err, outputBytes, "create commit")
 	}
 
 	outputBytes, err = exec.Command("git", "-C", tmpDir, "rev-parse", "HEAD").CombinedOutput()
 	if err != nil {
-		if _, ok := err.(*exec.ExitError); ok {
-			fmt.Fprintf(os.Stderr, "failed to fetch temp commit sha: %s", outputBytes)
-			return "", err
-		} else {
-			fmt.Fprintf(os.Stderr, "failed to fetch temp commit sha: %s", err)
-			return "", err
-		}
+		return "", wrapError(err, outputBytes, "get commit hash")
 	}
 
 	return strings.TrimSpace(string(outputBytes)), nil
@@ -243,13 +248,7 @@ func pushBranchToRemote(tmpDir string) error {
 	// TODO: Find CodeCrafters remote and use that
 	outputBytes, err := exec.Command("git", "-C", tmpDir, "push", "origin", "HEAD").CombinedOutput()
 	if err != nil {
-		if _, ok := err.(*exec.ExitError); ok {
-			fmt.Fprintf(os.Stderr, "failed to push temp branch: %s", outputBytes)
-			return err
-		} else {
-			fmt.Fprintf(os.Stderr, "failed to push temp branch: %s", err)
-			return err
-		}
+		return wrapError(err, outputBytes, "run git command")
 	}
 
 	return nil
@@ -258,15 +257,21 @@ func pushBranchToRemote(tmpDir string) error {
 func streamLogs(logstreamUrl string) error {
 	consumer, err := logstream_consumer.NewConsumer(logstreamUrl, func(message string) {})
 	if err != nil {
-		fmt.Printf("Err: %v\n", err)
-		return err
+		return fmt.Errorf("new log consumer: %w", err)
 	}
 
 	_, err = io.Copy(os.Stdout, consumer)
 	if err != nil {
-		fmt.Printf("Err: %v\n", err)
-		return err
+		return fmt.Errorf("stream data: %w", err)
 	}
 
 	return nil
+}
+
+func wrapError(err error, output []byte, msg string) error {
+	if _, ok := err.(*exec.ExitError); ok {
+		return fmt.Errorf("add all files: %s", output)
+	}
+
+	return fmt.Errorf("add all files: %w", err)
 }

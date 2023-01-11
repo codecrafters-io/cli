@@ -4,10 +4,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	retry "github.com/avast/retry-go"
-	"github.com/levigross/grequests"
 	"os"
 	"time"
+
+	retry "github.com/avast/retry-go"
+	"github.com/levigross/grequests"
 )
 
 type CreateSubmissionResponse struct {
@@ -68,6 +69,10 @@ func (c CodecraftersClient) CreateSubmission(repositoryId string, commitSha stri
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "failed to submit code to CodeCrafters: %s", err)
 		return CreateSubmissionResponse{}, err
+	}
+
+	if createSubmissionResponse.IsError {
+		return createSubmissionResponse, fmt.Errorf("%s", createSubmissionResponse.ErrorMessage)
 	}
 
 	return createSubmissionResponse, nil
