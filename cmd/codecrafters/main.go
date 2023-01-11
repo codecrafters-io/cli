@@ -109,6 +109,8 @@ func newLogger() zerolog.Logger {
 	var logWriter io.Writer
 
 	switch logFmt := os.Getenv("CODECRAFTERS_LOG_FORMAT"); logFmt {
+	default:
+		fallthrough
 	case "pretty":
 		logWriter = zerolog.NewConsoleWriter(func(w *zerolog.ConsoleWriter) {
 			w.TimeFormat = "15:04:05.000"
@@ -117,8 +119,6 @@ func newLogger() zerolog.Logger {
 				return fmt.Sprintf("%-20s", x)
 			}
 		})
-	default:
-		fallthrough
 	case "json":
 		logWriter = os.Stderr
 	}
