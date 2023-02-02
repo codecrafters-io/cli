@@ -11,7 +11,6 @@ import (
 
 	"github.com/codecrafters-io/cli/internal/commands"
 	"github.com/codecrafters-io/cli/internal/utils"
-	"github.com/getsentry/sentry-go"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
@@ -76,7 +75,6 @@ func run() error {
 
 	logger := newLogger()
 
-	var err error
 	cmd := flag.Arg(0)
 
 	logger.Debug().Str("command", cmd).Msg("command")
@@ -85,7 +83,7 @@ func run() error {
 
 	switch cmd {
 	case "test":
-		err = commands.TestCommand(ctx)
+		return commands.TestCommand(ctx)
 	case "help",
 		"": // no argument
 		flag.Usage()
@@ -94,10 +92,6 @@ func run() error {
 		log.Info().Msg("Run codecrafters help for a list of available commands.")
 
 		return errors.New("bad usage")
-	}
-
-	if err != nil {
-		return fmt.Errorf("%v: %w", cmd, err)
 	}
 
 	return nil
