@@ -60,7 +60,7 @@ func (c CodecraftersClient) CreateSubmission(repositoryId string, commitSha stri
 
 	if !response.Ok && response.StatusCode != 403 {
 		fmt.Fprintf(os.Stderr, "failed to submit code to CodeCrafters. status code: %d. body: %s", response.StatusCode, response.String())
-		return CreateSubmissionResponse{}, errors.New("dummy")
+		return CreateSubmissionResponse{}, errors.New("failed to submit code to CodeCrafters")
 	}
 
 	createSubmissionResponse := CreateSubmissionResponse{}
