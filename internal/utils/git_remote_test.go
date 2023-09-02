@@ -29,7 +29,7 @@ func TestIdentifyGitRemoteWithSingleStagingRemote(t *testing.T) {
 
 	assert.Equal(t, "origin", remote.Name)
 	assert.Equal(t, "https://git-staging.codecrafters.io/dummy", remote.Url)
-	assert.Equal(t, "https://app-staging.codecrafters.io", remote.CodecraftersServerURL())
+	assert.Equal(t, "https://backend-staging.codecrafters.io", remote.CodecraftersServerURL())
 }
 
 func TestIdentifyGitRemoteWithSingleDevelopmentRemote(t *testing.T) {
