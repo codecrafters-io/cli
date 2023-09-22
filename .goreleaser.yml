@@ -20,5 +20,5 @@ brews:
     description: CodeCrafters CLI
     license: MIT
     # TODO: Add completions
-    install: |
+    install: |-
       bin.install "codecrafters"
