@@ -34,6 +34,13 @@ type CreateSubmissionResponse struct {
 	ErrorMessage string `json:"error_message"`
 }
 
+type FetchBuildStatusResponse struct {
+	Status string `json:"status"`
+
+	ErrorMessage string `json:"error_message"`
+	IsError      bool   `json:"is_error"`
+}
+
 type FetchSubmissionResponse struct {
 	ErrorMessage string `json:"error_message"`
 	IsError      bool   `json:"is_error"`
@@ -139,4 +146,56 @@ func (c CodecraftersClient) doFetchSubmission(submissionId string) (FetchSubmiss
 	}
 
 	return fetchSubmissionResponse, nil
+}
+
+func (c CodecraftersClient) FetchBuild(buildId string) (FetchBuildStatusResponse, error) {
+	var fetchBuildResponse FetchBuildStatusResponse
+
+	err := retry.Do(
+		func() error {
+			var err error
+			fetchBuildResponse, err = c.doFetchBuild(buildId)
+			if err != nil {
+				return err
+			}
+
+			if fetchBuildResponse.Status != "failure" && fetchBuildResponse.Status != "success" {
+				return fmt.Errorf("unexpected build status: %s", fetchBuildResponse.Status)
+			}
+
+			return nil
+		},
+		retry.Attempts(5),
+		retry.DelayType(retry.BackOffDelay),
+		retry.MaxDelay(2*time.Second),
+		retry.Delay(500*time.Millisecond),
+		retry.LastErrorOnly(true),
+	)
+
+	if err != nil {
+		return FetchBuildStatusResponse{}, err
+	}
+
+	return fetchBuildResponse, nil
+}
+
+func (c CodecraftersClient) doFetchBuild(buildId string) (FetchBuildStatusResponse, error) {
+	response, err := grequests.Get(fmt.Sprintf("%s/builds/%s", c.ServerUrl, buildId), &grequests.RequestOptions{Headers: c.headers()})
+
+	if err != nil {
+		return FetchBuildStatusResponse{}, fmt.Errorf("failed to fetch build result from CodeCrafters: %s", err)
+	}
+
+	if !response.Ok {
+		return FetchBuildStatusResponse{}, fmt.Errorf("failed to fetch build result from CodeCrafters. status code: %d", response.StatusCode)
+	}
+
+	fetchBuildResponse := FetchBuildStatusResponse{}
+
+	err = json.Unmarshal(response.Bytes(), &fetchBuildResponse)
+	if err != nil {
+		return FetchBuildStatusResponse{}, fmt.Errorf("failed to fetch build result from CodeCrafters: %s", err)
+	}
+
+	return fetchBuildResponse, nil
 }
