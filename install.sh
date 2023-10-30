@@ -3,10 +3,10 @@
 set -eu
 
 # allow overriding the version
-VERSION=${SENTRY_CLI_VERSION:-v20}
+VERSION=${CODECRAFTERS_CLI_VERSION:-v20}
 
-PLATFORM=`uname -s`
-ARCH=`uname -m`
+PLATFORM=$(uname -s)
+ARCH=$(uname -m)
 
 if [ "$PLATFORM" = "Darwin" ]; then
   OS=darwin
@@ -18,16 +18,16 @@ else
 fi
 
 case "$ARCH" in
-  x86_64)
-    ARCH=amd64
-    ;;
-  armv8* | arm64* | aarch64* )
-    ARCH=arm64
-    ;;
-  *)
-    echo "unsupported arch: $ARCH"
-    exit 1
-    ;;
+x86_64)
+  ARCH=amd64
+  ;;
+armv8* | arm64* | aarch64*)
+  ARCH=arm64
+  ;;
+*)
+  echo "unsupported arch: $ARCH"
+  exit 1
+  ;;
 esac
 
 INSTALL_DIR=${INSTALL_DIR:-/usr/local/bin}
@@ -49,8 +49,8 @@ if ! command -v curl >/dev/null; then
   exit 1
 fi
 
-TEMP_FILE=`mktemp "${TMPDIR:-/tmp}/.codecrafterscli.XXXXXXXX"`
-TEMP_FOLDER=`mktemp -d "${TMPDIR:-/tmp}/.codecrafterscli-headers.XXXXXXXX"`
+TEMP_FILE=$(mktemp "${TMPDIR:-/tmp}/.codecrafterscli.XXXXXXXX")
+TEMP_FOLDER=$(mktemp -d "${TMPDIR:-/tmp}/.codecrafterscli-headers.XXXXXXXX")
 
 cleanup() {
   rm -f "$TEMP_FILE"
@@ -71,7 +71,7 @@ tar xzf "$TEMP_FILE" -C "$TEMP_FOLDER" codecrafters
 
 chmod 0755 "$TEMP_FOLDER/codecrafters"
 
-if ! mv "$TEMP_FOLDER/codecrafters" "$INSTALL_PATH" 2> /dev/null; then
+if ! mv "$TEMP_FOLDER/codecrafters" "$INSTALL_PATH" 2>/dev/null; then
   sudo -k mv "$TEMP_FOLDER/codecrafters" "$INSTALL_PATH"
 fi
 
