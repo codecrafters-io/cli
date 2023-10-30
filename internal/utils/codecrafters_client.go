@@ -168,7 +168,7 @@ func (c CodecraftersClient) FetchBuild(buildId string) (FetchBuildStatusResponse
 		retry.Attempts(5),
 		retry.DelayType(retry.BackOffDelay),
 		retry.MaxDelay(2*time.Second),
-		retry.Delay(500*time.Millisecond),
+		retry.Delay(100*time.Millisecond),
 		retry.LastErrorOnly(true),
 	)
 
@@ -180,7 +180,7 @@ func (c CodecraftersClient) FetchBuild(buildId string) (FetchBuildStatusResponse
 }
 
 func (c CodecraftersClient) doFetchBuild(buildId string) (FetchBuildStatusResponse, error) {
-	response, err := grequests.Get(fmt.Sprintf("%s/builds/%s", c.ServerUrl, buildId), &grequests.RequestOptions{Headers: c.headers()})
+	response, err := grequests.Get(fmt.Sprintf("%s/test_runner_builds/%s", c.ServerUrl, buildId), &grequests.RequestOptions{Headers: c.headers()})
 
 	if err != nil {
 		return FetchBuildStatusResponse{}, fmt.Errorf("failed to fetch build result from CodeCrafters: %s", err)

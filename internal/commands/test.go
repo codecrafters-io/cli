@@ -139,6 +139,9 @@ func TestCommand(ctx context.Context) (err error) {
 			return fmt.Errorf("stream build logs: %w", err)
 		}
 
+		logger.Debug().Msg("end stream build logs")
+		logger.Debug().Msg("fetching build")
+
 		fetchBuildResponse, err := codecraftersClient.FetchBuild(createSubmissionResponse.BuildID)
 		if err != nil {
 			// TODO: Notify sentry
@@ -150,6 +153,7 @@ func TestCommand(ctx context.Context) (err error) {
 			return err
 		}
 
+		logger.Debug().Msg("finished fetching build")
 		red := color.New(color.FgRed).SprintFunc()
 
 		switch fetchBuildResponse.Status {
