@@ -116,7 +116,7 @@ func TestCommand(ctx context.Context) (err error) {
 
 		wrapped := wordwrap.WrapString(createSubmissionResponse.OnInitSuccessMessage, 79)
 		for _, line := range strings.Split(wrapped, "\n") {
-			fmt.Println(fmt.Sprintf("\033[1;92m%s\033[0m", line))
+			fmt.Printf("\033[1;92m%s\033[0m\n", line)
 		}
 	}
 
@@ -125,14 +125,14 @@ func TestCommand(ctx context.Context) (err error) {
 
 		wrapped := wordwrap.WrapString(createSubmissionResponse.OnInitWarningMessage, 79)
 		for _, line := range strings.Split(wrapped, "\n") {
-			fmt.Println(fmt.Sprintf("\033[31m%s\033[0m", line))
+			fmt.Printf("\033[31m%s\033[0m\n", line)
 		}
 	}
 
 	logger.Debug().Msg("stream logs")
 
 	fmt.Println("")
-	err = streamLogs(createSubmissionResponse.LogstreamUrl)
+	err = streamLogs(createSubmissionResponse.LogstreamURL)
 	if err != nil {
 		return fmt.Errorf("stream logs: %w", err)
 	}

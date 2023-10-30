@@ -1,10 +1,11 @@
 package utils
 
 import (
-	"github.com/stretchr/testify/assert"
 	"os"
 	"os/exec"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestIdentifyGitRemoteWithSingleProductionRemote(t *testing.T) {
@@ -61,7 +62,7 @@ func TestIdentifyGitRemoteWithMultipleCodecraftersRemotes(t *testing.T) {
 	createRemote(t, repositoryDir, "origin2", "https://git.codecrafters.io/dummy2")
 
 	_, err := IdentifyGitRemote(repositoryDir)
-	assert.EqualError(t, err, "Multiple CodeCrafters git remotes found: origin1, origin2")
+	assert.EqualError(t, err, "Multiple CodeCrafters git remotes found: https://git.codecrafters.io/dummy1, https://git.codecrafters.io/dummy2")
 }
 
 func TestIdentifyGitRemoteWithNoCodecraftersRemotes(t *testing.T) {
@@ -70,7 +71,7 @@ func TestIdentifyGitRemoteWithNoCodecraftersRemotes(t *testing.T) {
 	createRemote(t, repositoryDir, "github", "https://github.com/codecrafters-io/dummy2")
 
 	_, err := IdentifyGitRemote(repositoryDir)
-	assert.EqualError(t, err, "No CodeCrafters git remotes found. Available remotes: github, gitlab")
+	assert.EqualError(t, err, "No CodeCrafters git remotes found. Available remotes: https://github.com/codecrafters-io/dummy2, https://gitlab.com/codecrafters-io/dummy1\nPlease run this command from within your CodeCrafters Git repository.")
 }
 
 func createEmptyRepository(t *testing.T) string {
