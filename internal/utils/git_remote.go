@@ -37,6 +37,14 @@ func (r GitRemote) CodecraftersServerURL() string {
 		return replacedUrl
 	}
 
+	newDevServerRegex := regexp.MustCompile("(.*)-git.ccdev.dev")
+
+	if newDevServerRegex.MatchString(r.Url) {
+		replacedUrl := regexp.MustCompile("-git").ReplaceAllString(r.Url, "-backend")
+		replacedUrl = regexp.MustCompile("ccdev.dev/.*").ReplaceAllString(replacedUrl, "ccdev.dev")
+		return replacedUrl
+	}
+
 	return ""
 }
 

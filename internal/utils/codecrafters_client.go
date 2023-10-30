@@ -2,7 +2,6 @@ package utils
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"os"
 	"time"
@@ -72,20 +71,19 @@ func (c CodecraftersClient) CreateSubmission(repositoryId string, commitSha stri
 	})
 
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "failed to submit code to CodeCrafters: %s", err)
+		fmt.Fprintf(os.Stderr, "failed to submit code to CodeCrafters: %s\n", err)
 		return CreateSubmissionResponse{}, err
 	}
 
 	if !response.Ok && response.StatusCode != 403 {
-		fmt.Fprintf(os.Stderr, "failed to submit code to CodeCrafters. status code: %d. body: %s", response.StatusCode, response.String())
-		return CreateSubmissionResponse{}, errors.New("dummy")
+		return CreateSubmissionResponse{}, fmt.Errorf("failed to submit code to CodeCrafters. status code: %d, body: %s", response.StatusCode, response.String())
 	}
 
 	createSubmissionResponse := CreateSubmissionResponse{}
 
 	err = json.Unmarshal(response.Bytes(), &createSubmissionResponse)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "failed to submit code to CodeCrafters: %s", err)
+		fmt.Fprintf(os.Stderr, "failed to submit code to CodeCrafters: %s\n", err)
 		return CreateSubmissionResponse{}, err
 	}
 
