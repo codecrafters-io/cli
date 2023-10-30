@@ -62,7 +62,7 @@ func TestCommand(ctx context.Context) (err error) {
 
 	codecraftersRemote, err := utils.IdentifyGitRemote(repoDir)
 	if err != nil {
-		return fmt.Errorf("find codecrafters repository url: %w", err)
+		return err
 	}
 
 	logger.Debug().Msg("copy repo")
@@ -116,7 +116,7 @@ func TestCommand(ctx context.Context) (err error) {
 
 		wrapped := wordwrap.WrapString(createSubmissionResponse.OnInitSuccessMessage, 79)
 		for _, line := range strings.Split(wrapped, "\n") {
-			fmt.Println(fmt.Sprintf("\033[1;92m%s\033[0m", line))
+			fmt.Printf("\033[1;92m%s\033[0m\n", line)
 		}
 	}
 
@@ -125,14 +125,62 @@ func TestCommand(ctx context.Context) (err error) {
 
 		wrapped := wordwrap.WrapString(createSubmissionResponse.OnInitWarningMessage, 79)
 		for _, line := range strings.Split(wrapped, "\n") {
-			fmt.Println(fmt.Sprintf("\033[31m%s\033[0m", line))
+			fmt.Printf("\033[31m%s\033[0m\n", line)
+		}
+	}
+
+	fmt.Println("")
+
+	if createSubmissionResponse.BuildLogstreamURL != "" {
+		logger.Debug().Msg("stream build logs")
+
+		err = streamLogs(createSubmissionResponse.BuildLogstreamURL)
+		if err != nil {
+			return fmt.Errorf("stream build logs: %w", err)
+		}
+
+		logger.Debug().Msg("end stream build logs")
+		logger.Debug().Msg("fetching build")
+
+		fetchBuildResponse, err := codecraftersClient.FetchBuild(createSubmissionResponse.BuildID)
+		if err != nil {
+			// TODO: Notify sentry
+			red := color.New(color.FgRed).SprintFunc()
+			fmt.Fprintln(os.Stderr, red(err.Error()))
+			fmt.Fprintln(os.Stderr, "")
+			fmt.Fprintln(os.Stderr, red("We couldn't fetch the results of your submission. Please try again?"))
+			fmt.Fprintln(os.Stderr, red("Let us know at hello@codecrafters.io if this error persists."))
+			return err
+		}
+
+		logger.Debug().Msg("finished fetching build")
+		red := color.New(color.FgRed).SprintFunc()
+
+		switch fetchBuildResponse.Status {
+		case "failure":
+			fmt.Fprintln(os.Stderr, red(""))
+			fmt.Fprintln(os.Stderr, red("Looks like your codebase failed to build."))
+			fmt.Fprintln(os.Stderr, red("If you think this is a CodeCrafters error, please let us know at hello@codecrafters.io."))
+			fmt.Fprintln(os.Stderr, red(""))
+			os.Exit(0)
+		case "success":
+			time.Sleep(1 * time.Second) // The delay in-between build and test logs is usually 5-10 seconds, so let's buy some time
+
+			fmt.Println("")
+			fmt.Println("Running tests. Logs should appear shortly...")
+			fmt.Println("")
+		default:
+			red := color.New(color.FgRed).SprintFunc()
+
+			fmt.Fprintln(os.Stderr, red("We couldn't fetch the results of your build. Please try again?"))
+			fmt.Fprintln(os.Stderr, red("Let us know at hello@codecrafters.io if this error persists."))
+			os.Exit(1)
 		}
 	}
 
 	logger.Debug().Msg("stream logs")
 
-	fmt.Println("")
-	err = streamLogs(createSubmissionResponse.LogstreamUrl)
+	err = streamLogs(createSubmissionResponse.LogstreamURL)
 	if err != nil {
 		return fmt.Errorf("stream logs: %w", err)
 	}

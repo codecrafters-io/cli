@@ -12,14 +12,33 @@ import (
 )
 
 type CreateSubmissionResponse struct {
-	Id                   string `json:"id"`
-	ErrorMessage         string `json:"error_message"`
-	IsError              bool   `json:"is_error"`
-	LogstreamUrl         string `json:"logstream_url"`
-	OnFailureMessage     string `json:"on_failure_message"`
+	Id string `json:"id"`
+
+	// BuildLogstreamURL is returned when the submission is waiting on a build
+	BuildID           string `json:"build_id"`
+	BuildLogstreamURL string `json:"build_logstream_url"`
+
+	CommitSHA string `json:"commit_sha"`
+
+	// LogstreamURL contains test logs.
+	LogstreamURL string `json:"logstream_url"`
+
+	// Messages to be displayed to the user
 	OnSuccessMessage     string `json:"on_success_message"`
+	OnFailureMessage     string `json:"on_failure_message"`
 	OnInitSuccessMessage string `json:"on_init_success_message"`
 	OnInitWarningMessage string `json:"on_init_warning_message"`
+
+	// IsError is true when the submission failed to be created, and ErrorMessage is the human-friendly error message
+	IsError      bool   `json:"is_error"`
+	ErrorMessage string `json:"error_message"`
+}
+
+type FetchBuildStatusResponse struct {
+	Status string `json:"status"`
+
+	ErrorMessage string `json:"error_message"`
+	IsError      bool   `json:"is_error"`
 }
 
 type FetchSubmissionResponse struct {
@@ -43,7 +62,6 @@ func (c CodecraftersClient) headers() map[string]string {
 }
 
 func (c CodecraftersClient) CreateSubmission(repositoryId string, commitSha string) (CreateSubmissionResponse, error) {
-	// TODO: Include version in headers?
 	response, err := grequests.Post(c.ServerUrl+"/submissions", &grequests.RequestOptions{
 		JSON: map[string]interface{}{
 			"repository_id":       repositoryId,
@@ -110,7 +128,6 @@ func (c CodecraftersClient) FetchSubmission(submissionId string) (FetchSubmissio
 }
 
 func (c CodecraftersClient) doFetchSubmission(submissionId string) (FetchSubmissionResponse, error) {
-	// TODO: Include version in headers?
 	response, err := grequests.Get(fmt.Sprintf("%s/submissions/%s", c.ServerUrl, submissionId), &grequests.RequestOptions{Headers: c.headers()})
 
 	if err != nil {
@@ -129,4 +146,56 @@ func (c CodecraftersClient) doFetchSubmission(submissionId string) (FetchSubmiss
 	}
 
 	return fetchSubmissionResponse, nil
+}
+
+func (c CodecraftersClient) FetchBuild(buildId string) (FetchBuildStatusResponse, error) {
+	var fetchBuildResponse FetchBuildStatusResponse
+
+	err := retry.Do(
+		func() error {
+			var err error
+			fetchBuildResponse, err = c.doFetchBuild(buildId)
+			if err != nil {
+				return err
+			}
+
+			if fetchBuildResponse.Status != "failure" && fetchBuildResponse.Status != "success" {
+				return fmt.Errorf("unexpected build status: %s", fetchBuildResponse.Status)
+			}
+
+			return nil
+		},
+		retry.Attempts(5),
+		retry.DelayType(retry.BackOffDelay),
+		retry.MaxDelay(2*time.Second),
+		retry.Delay(100*time.Millisecond),
+		retry.LastErrorOnly(true),
+	)
+
+	if err != nil {
+		return FetchBuildStatusResponse{}, err
+	}
+
+	return fetchBuildResponse, nil
+}
+
+func (c CodecraftersClient) doFetchBuild(buildId string) (FetchBuildStatusResponse, error) {
+	response, err := grequests.Get(fmt.Sprintf("%s/test_runner_builds/%s", c.ServerUrl, buildId), &grequests.RequestOptions{Headers: c.headers()})
+
+	if err != nil {
+		return FetchBuildStatusResponse{}, fmt.Errorf("failed to fetch build result from CodeCrafters: %s", err)
+	}
+
+	if !response.Ok {
+		return FetchBuildStatusResponse{}, fmt.Errorf("failed to fetch build result from CodeCrafters. status code: %d", response.StatusCode)
+	}
+
+	fetchBuildResponse := FetchBuildStatusResponse{}
+
+	err = json.Unmarshal(response.Bytes(), &fetchBuildResponse)
+	if err != nil {
+		return FetchBuildStatusResponse{}, fmt.Errorf("failed to fetch build result from CodeCrafters: %s", err)
+	}
+
+	return fetchBuildResponse, nil
 }
