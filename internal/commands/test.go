@@ -62,7 +62,7 @@ func TestCommand(ctx context.Context) (err error) {
 
 	codecraftersRemote, err := utils.IdentifyGitRemote(repoDir)
 	if err != nil {
-		return fmt.Errorf("find codecrafters repository url: %w", err)
+		return err
 	}
 
 	logger.Debug().Msg("copy repo")

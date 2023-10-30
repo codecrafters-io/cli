@@ -11,6 +11,7 @@ import (
 
 	"github.com/codecrafters-io/cli/internal/commands"
 	"github.com/codecrafters-io/cli/internal/utils"
+	"github.com/fatih/color"
 	"github.com/getsentry/sentry-go"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -51,7 +52,8 @@ COMMANDS
 
 	err := run()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%v\n", err)
+		red := color.New(color.FgRed).SprintFunc()
+		fmt.Fprintf(os.Stderr, "%v\n", red(err))
 		os.Exit(1)
 	}
 
