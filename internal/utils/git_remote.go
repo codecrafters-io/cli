@@ -25,8 +25,8 @@ func (r GitRemote) CodecraftersServerURL() string {
 		return "https://app.codecrafters.io"
 	}
 
-	if strings.Contains(r.Url, "git.staging.codecrafters.io") {
-		return "https://app.staging.codecrafters.io"
+	if strings.Contains(r.Url, "git-staging.codecrafters.io") {
+		return "https://app-staging.codecrafters.io"
 	}
 
 	devServerRegex := regexp.MustCompile("codecrafters-([^-]*)-git.ngrok.io")
