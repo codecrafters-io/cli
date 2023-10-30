@@ -11,6 +11,7 @@ import (
 
 	"github.com/codecrafters-io/cli/internal/commands"
 	"github.com/codecrafters-io/cli/internal/utils"
+	"github.com/getsentry/sentry-go"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
@@ -44,7 +45,7 @@ COMMANDS
 	}
 
 	if *showVersion {
-		fmt.Println(fmt.Sprintf("codecrafters %s", utils.VersionString()))
+		fmt.Println(utils.VersionString())
 		os.Exit(0)
 	}
 
