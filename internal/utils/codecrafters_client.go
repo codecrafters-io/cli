@@ -4,11 +4,39 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	retry "github.com/avast/retry-go"
 	"github.com/levigross/grequests"
+	"github.com/mitchellh/go-wordwrap"
 )
+
+type Message struct {
+	Text  string `json:"text"`
+	Color string `json:"color"`
+}
+
+func (m Message) Print() {
+	wrapped := wordwrap.WrapString(m.Text, 79)
+
+	lineFormat := "%s\n"
+
+	switch m.Color {
+	case "red":
+		lineFormat = "\033[31m%s\033[0m\n"
+	case "green":
+		lineFormat = "\033[32m%s\033[0m\n"
+	case "yellow":
+		lineFormat = "\033[33m%s\033[0m\n"
+	case "blue":
+		lineFormat = "\033[34m%s\033[0m\n"
+	}
+
+	for _, line := range strings.Split(wrapped, "\n") {
+		fmt.Printf(lineFormat, line)
+	}
+}
 
 type CreateSubmissionResponse struct {
 	Id string `json:"id"`
@@ -22,11 +50,10 @@ type CreateSubmissionResponse struct {
 	// LogstreamURL contains test logs.
 	LogstreamURL string `json:"logstream_url"`
 
-	// Messages to be displayed to the user
-	OnSuccessMessage     string `json:"on_success_message"`
-	OnFailureMessage     string `json:"on_failure_message"`
-	OnInitSuccessMessage string `json:"on_init_success_message"`
-	OnInitWarningMessage string `json:"on_init_warning_message"`
+	// Messages to be displayed to the user at various stages of the submission lifecycle
+	OnInitMessages    []Message `json:"on_init_messages"`
+	OnSuccessMessages []Message `json:"on_success_messages"`
+	OnFailureMessages []Message `json:"on_failure_messages"`
 
 	// IsError is true when the submission failed to be created, and ErrorMessage is the human-friendly error message
 	IsError      bool   `json:"is_error"`

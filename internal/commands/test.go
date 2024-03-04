@@ -17,7 +17,6 @@ import (
 	logstream_consumer "github.com/codecrafters-io/logstream/consumer"
 	"github.com/fatih/color"
 	"github.com/getsentry/sentry-go"
-	wordwrap "github.com/mitchellh/go-wordwrap"
 	cp "github.com/otiai10/copy"
 	"github.com/rs/zerolog"
 )
@@ -89,7 +88,7 @@ func TestCommand(ctx context.Context) (err error) {
 	}
 
 	// Place this before the push so that it "feels" fast
-	fmt.Println("Running tests on your codebase. Streaming logs...")
+	fmt.Println("Initiating test run...")
 
 	logger.Debug().Msg("push changes")
 
@@ -111,29 +110,15 @@ func TestCommand(ctx context.Context) (err error) {
 
 	logger.Debug().Interface("response", createSubmissionResponse).Msg("submission created")
 
-	if createSubmissionResponse.OnInitSuccessMessage != "" {
+	for _, message := range createSubmissionResponse.OnInitMessages {
 		fmt.Println("")
-
-		wrapped := wordwrap.WrapString(createSubmissionResponse.OnInitSuccessMessage, 79)
-		for _, line := range strings.Split(wrapped, "\n") {
-			fmt.Printf("\033[1;92m%s\033[0m\n", line)
-		}
+		message.Print()
 	}
-
-	if createSubmissionResponse.OnInitWarningMessage != "" {
-		fmt.Println("")
-
-		wrapped := wordwrap.WrapString(createSubmissionResponse.OnInitWarningMessage, 79)
-		for _, line := range strings.Split(wrapped, "\n") {
-			fmt.Printf("\033[31m%s\033[0m\n", line)
-		}
-	}
-
-	fmt.Println("")
 
 	if createSubmissionResponse.BuildLogstreamURL != "" {
 		logger.Debug().Msg("stream build logs")
 
+		fmt.Println("")
 		err = streamLogs(createSubmissionResponse.BuildLogstreamURL)
 		if err != nil {
 			return fmt.Errorf("stream build logs: %w", err)
@@ -165,10 +150,6 @@ func TestCommand(ctx context.Context) (err error) {
 			os.Exit(0)
 		case "success":
 			time.Sleep(1 * time.Second) // The delay in-between build and test logs is usually 5-10 seconds, so let's buy some time
-
-			fmt.Println("")
-			fmt.Println("Running tests. Logs should appear shortly...")
-			fmt.Println("")
 		default:
 			red := color.New(color.FgRed).SprintFunc()
 
@@ -179,6 +160,10 @@ func TestCommand(ctx context.Context) (err error) {
 	}
 
 	logger.Debug().Msg("stream logs")
+
+	fmt.Println("")
+	fmt.Println("Running tests. Logs should appear shortly...")
+	fmt.Println("")
 
 	err = streamLogs(createSubmissionResponse.LogstreamURL)
 	if err != nil {
@@ -200,13 +185,19 @@ func TestCommand(ctx context.Context) (err error) {
 
 	logger.Debug().Interface("response", createSubmissionResponse).Msg("submission fetched")
 
-	fmt.Println("")
-
 	switch fetchSubmissionResponse.Status {
 	case "failure":
-		fmt.Println(createSubmissionResponse.OnFailureMessage)
+		for _, message := range createSubmissionResponse.OnFailureMessages {
+			fmt.Println("")
+			message.Print()
+		}
 	case "success":
-		fmt.Println(createSubmissionResponse.OnSuccessMessage)
+		for _, message := range createSubmissionResponse.OnSuccessMessages {
+			fmt.Println("")
+			message.Print()
+		}
+	default:
+		fmt.Println("")
 	}
 
 	if fetchSubmissionResponse.IsError {
