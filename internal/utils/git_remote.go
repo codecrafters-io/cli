@@ -29,17 +29,19 @@ func (r GitRemote) CodecraftersServerURL() string {
 		return "https://backend-staging.codecrafters.io"
 	}
 
-	devServerRegex := regexp.MustCompile("codecrafters-([^-]*)-git.ngrok.io")
+	ngrokDevServerRegex := regexp.MustCompile(`cc-([\w-]+).ngrok.io`)
 
-	if devServerRegex.MatchString(r.Url) {
-		replacedUrl := regexp.MustCompile("-git").ReplaceAllString(r.Url, "")
-		replacedUrl = regexp.MustCompile("ngrok.io/.*").ReplaceAllString(replacedUrl, "ngrok.io")
+	// cc-paul-git.ngrok.io -> paul-backend.ccdev.dev
+	if ngrokDevServerRegex.MatchString(r.Url) {
+		replacedUrl := regexp.MustCompile(`\-git.ngrok.io/.*`).ReplaceAllString(r.Url, "-backend.ccdev.dev") // cc-paul-backend.ccdev.dev
+		replacedUrl = regexp.MustCompile("cc-").ReplaceAllString(replacedUrl, "")                            // paul-backend.ccdev.dev
 		return replacedUrl
 	}
 
-	newDevServerRegex := regexp.MustCompile("(.*)-git.ccdev.dev")
+	cloudflareDevServerRegex := regexp.MustCompile("(.*)-git.ccdev.dev")
 
-	if newDevServerRegex.MatchString(r.Url) {
+	// cc-paul-git.ccdev.dev -> paul.ccdev.dev
+	if cloudflareDevServerRegex.MatchString(r.Url) {
 		replacedUrl := regexp.MustCompile("-git").ReplaceAllString(r.Url, "-backend")
 		replacedUrl = regexp.MustCompile("ccdev.dev/.*").ReplaceAllString(replacedUrl, "ccdev.dev")
 		return replacedUrl
