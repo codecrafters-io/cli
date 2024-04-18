@@ -88,7 +88,7 @@ func (c CodecraftersClient) headers() map[string]string {
 }
 
 func (c CodecraftersClient) CreateSubmission(repositoryId string, commitSha string) (CreateSubmissionResponse, error) {
-	response, err := grequests.Post(c.ServerUrl+"/submissions", &grequests.RequestOptions{
+	response, err := grequests.Post(c.ServerUrl+"/services/cli/create_submission", &grequests.RequestOptions{
 		JSON: map[string]interface{}{
 			"repository_id":       repositoryId,
 			"commit_sha":          commitSha,
@@ -153,7 +153,12 @@ func (c CodecraftersClient) FetchSubmission(submissionId string) (FetchSubmissio
 }
 
 func (c CodecraftersClient) doFetchSubmission(submissionId string) (FetchSubmissionResponse, error) {
-	response, err := grequests.Get(fmt.Sprintf("%s/submissions/%s", c.ServerUrl, submissionId), &grequests.RequestOptions{Headers: c.headers()})
+	response, err := grequests.Get(fmt.Sprintf("%s/services/cli/fetch_submission", c.ServerUrl), &grequests.RequestOptions{
+		Params: map[string]string{
+			"submission_id": submissionId,
+		},
+		Headers: c.headers(),
+	})
 
 	if err != nil {
 		return FetchSubmissionResponse{}, fmt.Errorf("failed to fetch submission result from CodeCrafters: %s", err)
@@ -205,7 +210,12 @@ func (c CodecraftersClient) FetchBuild(buildId string) (FetchBuildStatusResponse
 }
 
 func (c CodecraftersClient) doFetchBuild(buildId string) (FetchBuildStatusResponse, error) {
-	response, err := grequests.Get(fmt.Sprintf("%s/test_runner_builds/%s", c.ServerUrl, buildId), &grequests.RequestOptions{Headers: c.headers()})
+	response, err := grequests.Get(fmt.Sprintf("%s/services/cli/fetch_test_runner_build", c.ServerUrl), &grequests.RequestOptions{
+		Params: map[string]string{
+			"test_runner_build_id": buildId,
+		},
+		Headers: c.headers(),
+	})
 
 	if err != nil {
 		return FetchBuildStatusResponse{}, fmt.Errorf("failed to fetch build result from CodeCrafters: %s", err)
