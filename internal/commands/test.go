@@ -8,7 +8,6 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -52,7 +51,7 @@ func TestCommand(ctx context.Context) (err error) {
 
 	logger.Debug().Msg("get repo root")
 
-	repoDir, err := GetRepositoryDir()
+	repoDir, err := utils.GetRepositoryDir()
 	if err != nil {
 		return fmt.Errorf("find repository root folder: %w", err)
 	}
@@ -205,29 +204,6 @@ func TestCommand(ctx context.Context) (err error) {
 	}
 
 	return nil
-}
-
-func GetRepositoryDir() (string, error) {
-	dir, err := os.Getwd()
-	if err != nil {
-		return "", fmt.Errorf("get workdir: %w", err)
-	}
-
-	outputBytes, err := exec.Command("git", "-C", dir, "rev-parse", "--show-toplevel").CombinedOutput()
-	if err != nil {
-		if _, ok := err.(*exec.ExitError); ok {
-			if regexp.MustCompile("not a git repository").Match(outputBytes) {
-				fmt.Fprintf(os.Stderr, "The current directory is not within a Git repository.\n")
-				fmt.Fprintf(os.Stderr, "Please run this command from within your CodeCrafters Git repository.\n")
-
-				return "", errors.New("used not in a repository")
-			}
-		}
-
-		return "", wrapError(err, outputBytes, "run git command")
-	}
-
-	return strings.TrimSpace(string(outputBytes)), nil
 }
 
 func copyRepositoryDirToTempDir(repoDir string) (string, error) {
