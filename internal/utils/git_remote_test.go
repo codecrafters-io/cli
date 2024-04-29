@@ -17,31 +17,31 @@ func TestIdentifyGitRemoteWithSingleProductionRemote(t *testing.T) {
 
 	assert.Equal(t, "origin", remote.Name)
 	assert.Equal(t, "https://git.codecrafters.io/dummy", remote.Url)
-	assert.Equal(t, "https://app.codecrafters.io", remote.CodecraftersServerURL())
+	assert.Equal(t, "https://backend.codecrafters.io", remote.CodecraftersServerURL())
 }
 
 func TestIdentifyGitRemoteWithSingleStagingRemote(t *testing.T) {
 	repositoryDir := createEmptyRepository(t)
-	createRemote(t, repositoryDir, "origin", "https://git.staging.codecrafters.io/dummy")
+	createRemote(t, repositoryDir, "origin", "https://git-staging.codecrafters.io/dummy")
 
 	remote, err := IdentifyGitRemote(repositoryDir)
 	assert.Nil(t, err)
 
 	assert.Equal(t, "origin", remote.Name)
-	assert.Equal(t, "https://git.staging.codecrafters.io/dummy", remote.Url)
-	assert.Equal(t, "https://app.staging.codecrafters.io", remote.CodecraftersServerURL())
+	assert.Equal(t, "https://git-staging.codecrafters.io/dummy", remote.Url)
+	assert.Equal(t, "https://backend-staging.codecrafters.io", remote.CodecraftersServerURL())
 }
 
 func TestIdentifyGitRemoteWithSingleDevelopmentRemote(t *testing.T) {
 	repositoryDir := createEmptyRepository(t)
-	createRemote(t, repositoryDir, "origin", "https://codecrafters-paul-git.ngrok.io/dummy")
+	createRemote(t, repositoryDir, "origin", "https://cc-paul-git.ngrok.io/dummy")
 
 	remote, err := IdentifyGitRemote(repositoryDir)
 	assert.Nil(t, err)
 
 	assert.Equal(t, "origin", remote.Name)
-	assert.Equal(t, "https://codecrafters-paul-git.ngrok.io/dummy", remote.Url)
-	assert.Equal(t, "https://codecrafters-paul.ngrok.io", remote.CodecraftersServerURL())
+	assert.Equal(t, "https://cc-paul-git.ngrok.io/dummy", remote.Url)
+	assert.Equal(t, "https://paul-backend.ccdev.dev", remote.CodecraftersServerURL())
 }
 
 func TestIdentifyGitRemoteWithMultipleRemotes(t *testing.T) {
