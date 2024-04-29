@@ -111,7 +111,7 @@ func TestCommand(ctx context.Context) (err error) {
 		return fmt.Errorf("create submission: %w", err)
 	}
 
-	logger.Debug().Msgf("submission created: %v", createSubmissionResponse)
+	logger.Debug().Msgf("submission created: %v", createSubmissionResponse.Id)
 
 	for _, message := range createSubmissionResponse.OnInitMessages {
 		fmt.Println("")
@@ -184,7 +184,7 @@ func TestCommand(ctx context.Context) (err error) {
 		return err
 	}
 
-	logger.Debug().Msgf("finished fetching submission: %v", fetchSubmissionResponse)
+	logger.Debug().Msgf("finished fetching submission, status: %s", fetchSubmissionResponse.Status)
 
 	switch fetchSubmissionResponse.Status {
 	case "failure":
