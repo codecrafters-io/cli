@@ -2,31 +2,22 @@ package utils
 
 import (
 	"fmt"
-	"github.com/rs/zerolog"
-	"io"
 	"os"
 	"time"
+
+	"github.com/rs/zerolog"
 )
 
 func NewLogger() zerolog.Logger {
 	zerolog.TimeFieldFormat = time.RFC3339Nano
 
-	var logWriter io.Writer
+	logWriter := zerolog.NewConsoleWriter(func(w *zerolog.ConsoleWriter) {
+		w.TimeFormat = "15:04:05.000"
 
-	switch logFmt := os.Getenv("CODECRAFTERS_LOG_FORMAT"); logFmt {
-	default:
-		fallthrough
-	case "pretty":
-		logWriter = zerolog.NewConsoleWriter(func(w *zerolog.ConsoleWriter) {
-			w.TimeFormat = "15:04:05.000"
-
-			w.FormatMessage = func(x interface{}) string {
-				return fmt.Sprintf("%-20s", x)
-			}
-		})
-	case "json":
-		logWriter = os.Stderr
-	}
+		w.FormatMessage = func(message interface{}) string {
+			return fmt.Sprintf("%-20s", message)
+		}
+	})
 
 	logger := zerolog.New(logWriter).With().Timestamp().Logger()
 	logger = logger.Level(zerolog.InfoLevel)

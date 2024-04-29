@@ -62,7 +62,7 @@ func run() error {
 	logger := utils.NewLogger()
 	cmd := flag.Arg(0)
 
-	logger.Debug().Str("command", cmd).Msg("command")
+	logger.Debug().Msgf("Running command: %s", cmd)
 
 	ctx = logger.WithContext(ctx)
 

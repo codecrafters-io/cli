@@ -23,9 +23,9 @@ import (
 func TestCommand(ctx context.Context) (err error) {
 	logger := zerolog.Ctx(ctx)
 
-	logger.Debug().Msg("start command")
+	logger.Debug().Msg("test command starts")
 	defer func() {
-		logger.Debug().Err(err).Msg("end command")
+		logger.Debug().Err(err).Msg("test command ends")
 	}()
 
 	defer func() {
@@ -49,37 +49,43 @@ func TestCommand(ctx context.Context) (err error) {
 		sentry.CurrentHub().CaptureException(err)
 	}()
 
-	logger.Debug().Msg("get repo root")
+	logger.Debug().Msg("computing repository directory")
 
 	repoDir, err := utils.GetRepositoryDir()
 	if err != nil {
 		return fmt.Errorf("find repository root folder: %w", err)
 	}
 
-	logger.Debug().Msg("find remotes")
+	logger.Debug().Msgf("found repository directory: %s", repoDir)
+
+	logger.Debug().Msg("identifying remotes")
 
 	codecraftersRemote, err := utils.IdentifyGitRemote(repoDir)
 	if err != nil {
 		return err
 	}
 
-	logger.Debug().Msg("copy repo")
+	logger.Debug().Msgf("identified remote: %s, %s", codecraftersRemote.Name, codecraftersRemote.Url)
+
+	logger.Debug().Msg("copying repository to temp directory")
 
 	tmpDir, err := copyRepositoryDirToTempDir(repoDir)
 	if err != nil {
 		return fmt.Errorf("make a repo temp copy: %w", err)
 	}
 
+	logger.Debug().Msgf("copied repository to temp directory: %s", tmpDir)
+
 	tempBranchName := "cli-test-" + strconv.FormatInt(time.Now().UnixMilli(), 10)
 
-	logger.Debug().Msg("create temp branch")
+	logger.Debug().Msgf("creating temp branch: %s", tempBranchName)
 
 	err = checkoutNewBranch(tempBranchName, tmpDir)
 	if err != nil {
 		return fmt.Errorf("create temp branch: %w", err)
 	}
 
-	logger.Debug().Msg("commit changes")
+	logger.Debug().Msgf("committing changes to %s", tempBranchName)
 
 	tempCommitSha, err := commitChanges(tmpDir, fmt.Sprintf("CLI tests (%s)", tempBranchName))
 	if err != nil {
@@ -89,25 +95,23 @@ func TestCommand(ctx context.Context) (err error) {
 	// Place this before the push so that it "feels" fast
 	fmt.Println("Initiating test run...")
 
-	logger.Debug().Msg("push changes")
-
 	err = pushBranchToRemote(tmpDir)
 	if err != nil {
 		return fmt.Errorf("push changes: %w", err)
 	}
 
-	logger.Debug().Msg("create codecrafters client")
+	logger.Debug().Msgf("pushed changes to remote branch %s", tempBranchName)
 
 	codecraftersClient := utils.NewCodecraftersClient(codecraftersRemote.CodecraftersServerURL())
 
-	logger.Debug().Msg("create submission")
+	logger.Debug().Msgf("creating submission", tempCommitSha)
 
 	createSubmissionResponse, err := codecraftersClient.CreateSubmission(codecraftersRemote.CodecraftersRepositoryId(), tempCommitSha)
 	if err != nil {
 		return fmt.Errorf("create submission: %w", err)
 	}
 
-	logger.Debug().Interface("response", createSubmissionResponse).Msg("submission created")
+	logger.Debug().Msgf("submission created: %v", createSubmissionResponse)
 
 	for _, message := range createSubmissionResponse.OnInitMessages {
 		fmt.Println("")
@@ -115,7 +119,7 @@ func TestCommand(ctx context.Context) (err error) {
 	}
 
 	if createSubmissionResponse.BuildLogstreamURL != "" {
-		logger.Debug().Msg("stream build logs")
+		logger.Debug().Msgf("streaming build logs from %s", createSubmissionResponse.BuildLogstreamURL)
 
 		fmt.Println("")
 		err = streamLogs(createSubmissionResponse.BuildLogstreamURL)
@@ -123,7 +127,7 @@ func TestCommand(ctx context.Context) (err error) {
 			return fmt.Errorf("stream build logs: %w", err)
 		}
 
-		logger.Debug().Msg("end stream build logs")
+		logger.Debug().Msg("Finished streaming build logs")
 		logger.Debug().Msg("fetching build")
 
 		fetchBuildResponse, err := codecraftersClient.FetchBuild(createSubmissionResponse.BuildID)
@@ -137,7 +141,7 @@ func TestCommand(ctx context.Context) (err error) {
 			return err
 		}
 
-		logger.Debug().Msg("finished fetching build")
+		logger.Debug().Msgf("finished fetching build: %v", fetchBuildResponse)
 		red := color.New(color.FgRed).SprintFunc()
 
 		switch fetchBuildResponse.Status {
@@ -158,8 +162,6 @@ func TestCommand(ctx context.Context) (err error) {
 		}
 	}
 
-	logger.Debug().Msg("stream logs")
-
 	fmt.Println("")
 	fmt.Println("Running tests. Logs should appear shortly...")
 	fmt.Println("")
@@ -169,7 +171,7 @@ func TestCommand(ctx context.Context) (err error) {
 		return fmt.Errorf("stream logs: %w", err)
 	}
 
-	logger.Debug().Msg("fetch submission")
+	logger.Debug().Msgf("fetching submission %s", createSubmissionResponse.Id)
 
 	fetchSubmissionResponse, err := codecraftersClient.FetchSubmission(createSubmissionResponse.Id)
 	if err != nil {
@@ -182,7 +184,7 @@ func TestCommand(ctx context.Context) (err error) {
 		return err
 	}
 
-	logger.Debug().Interface("response", createSubmissionResponse).Msg("submission fetched")
+	logger.Debug().Msgf("finished fetching submission: %v", fetchSubmissionResponse)
 
 	switch fetchSubmissionResponse.Status {
 	case "failure":
