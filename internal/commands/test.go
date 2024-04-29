@@ -74,6 +74,8 @@ func TestCommand(ctx context.Context) (err error) {
 		return fmt.Errorf("make a repo temp copy: %w", err)
 	}
 
+	defer os.RemoveAll(tmpDir)
+
 	logger.Debug().Msgf("copied repository to temp directory: %s", tmpDir)
 
 	tempBranchName := "cli-test-" + strconv.FormatInt(time.Now().UnixMilli(), 10)
