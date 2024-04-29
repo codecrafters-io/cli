@@ -104,7 +104,7 @@ func TestCommand(ctx context.Context) (err error) {
 
 	codecraftersClient := utils.NewCodecraftersClient(codecraftersRemote.CodecraftersServerURL())
 
-	logger.Debug().Msgf("creating submission", tempCommitSha)
+	logger.Debug().Msgf("creating submission for %s", tempCommitSha)
 
 	createSubmissionResponse, err := codecraftersClient.CreateSubmission(codecraftersRemote.CodecraftersRepositoryId(), tempCommitSha)
 	if err != nil {
