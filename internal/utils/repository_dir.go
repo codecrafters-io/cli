@@ -26,7 +26,7 @@ func GetRepositoryDir() (string, error) {
 			}
 		}
 
-		return "", errors.New("failed to run git rev-parse to get repository dir")
+		return "", fmt.Errorf("failed to run 'git rev-parse' to get repository dir. err: %v.\n%s", err, string(outputBytes))
 	}
 
 	return strings.TrimSpace(string(outputBytes)), nil

@@ -53,7 +53,7 @@ func TestCommand(ctx context.Context) (err error) {
 
 	repoDir, err := utils.GetRepositoryDir()
 	if err != nil {
-		return fmt.Errorf("find repository root folder: %w", err)
+		return err
 	}
 
 	logger.Debug().Msgf("found repository directory: %s", repoDir)
