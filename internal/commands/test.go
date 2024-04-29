@@ -95,7 +95,7 @@ func TestCommand(ctx context.Context) (err error) {
 	// Place this before the push so that it "feels" fast
 	fmt.Println("Initiating test run...")
 
-	err = pushBranchToRemote(tmpDir)
+	err = pushBranchToRemote(tmpDir, codecraftersRemote.Name)
 	if err != nil {
 		return fmt.Errorf("push changes: %w", err)
 	}
@@ -261,9 +261,8 @@ func commitChanges(tmpDir string, commitMessage string) (string, error) {
 	return strings.TrimSpace(string(outputBytes)), nil
 }
 
-func pushBranchToRemote(tmpDir string) error {
-	// TODO: Find CodeCrafters remote and use that
-	outputBytes, err := exec.Command("git", "-C", tmpDir, "push", "origin", "HEAD").CombinedOutput()
+func pushBranchToRemote(tmpDir string, remoteName string) error {
+	outputBytes, err := exec.Command("git", "-C", tmpDir, "push", remoteName, "HEAD").CombinedOutput()
 	if err != nil {
 		return wrapError(err, outputBytes, "run git command")
 	}
