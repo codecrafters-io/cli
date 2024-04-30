@@ -77,6 +77,8 @@ func run() error {
 	switch cmd {
 	case "test":
 		return commands.TestCommand(ctx)
+	case "submit":
+		return commands.SubmitCommand(ctx)
 	case "help",
 		"": // no argument
 		flag.Usage()
