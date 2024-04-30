@@ -79,7 +79,11 @@ func run() error {
 		"": // no argument
 		flag.Usage()
 	default:
-		return fmt.Errorf("Unknown command '%s'. Did you mean to run `codecrafters test`?\n\nRun `codecrafters help` for a list of available commands.", cmd)
+		red := color.New(color.FgRed).SprintFunc()
+		fmt.Printf(red("Unknown command '%s'. Did you mean to run `codecrafters test`?\n\n"), cmd)
+		fmt.Printf("Run `codecrafters help` for a list of available commands.\n")
+
+		return fmt.Errorf("")
 	}
 
 	return nil
