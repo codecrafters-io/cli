@@ -23,11 +23,13 @@ USAGE
   $ codecrafters [command]
 
 EXAMPLES
-  $ codecrafters test # Run tests without committing changes
+  $ codecrafters test     # Run tests without committing changes
+  $ codecrafters submit   # Commit changes & submit to move to next step
 
 COMMANDS
-  test:  Run tests without committing changes
-  help:  Show usage instructions
+  test:        Run tests without committing changes
+  submit:      Commit changes & submit to move to next step
+  help:        Show usage instructions
 
 VERSION
   %s
