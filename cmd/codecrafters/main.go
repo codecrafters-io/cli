@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -10,7 +9,6 @@ import (
 	"github.com/codecrafters-io/cli/internal/commands"
 	"github.com/codecrafters-io/cli/internal/utils"
 	"github.com/fatih/color"
-	"github.com/rs/zerolog/log"
 )
 
 // Usage: codecrafters test
@@ -21,14 +19,18 @@ func main() {
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, `CLI to interact with CodeCrafters
 
-VERSION
-  %s
-
 USAGE
-  $ codecrafters [COMMAND]
+  $ codecrafters [command]
+
+EXAMPLES
+  $ codecrafters test # Run tests without committing changes
 
 COMMANDS
-  test:  run tests on project in current directory
+  test:  Run tests without committing changes
+  help:  Show usage instructions
+
+VERSION
+  %s
 `, utils.VersionString())
 
 	}
@@ -50,7 +52,11 @@ COMMANDS
 	err := run()
 	if err != nil {
 		red := color.New(color.FgRed).SprintFunc()
-		fmt.Fprintf(os.Stderr, "%v\n", red(err))
+
+		if err.Error() != "" {
+			fmt.Fprintf(os.Stderr, "%v\n", red(err))
+		}
+
 		os.Exit(1)
 	}
 
@@ -73,10 +79,11 @@ func run() error {
 		"": // no argument
 		flag.Usage()
 	default:
-		log.Error().Str("command", cmd).Msgf("Unknown command. Did you mean to run \"codecrafters test\"?")
-		log.Info().Msg("Run codecrafters help for a list of available commands.")
+		red := color.New(color.FgRed).SprintFunc()
+		fmt.Printf(red("Unknown command '%s'. Did you mean to run `codecrafters test`?\n\n"), cmd)
+		fmt.Printf("Run `codecrafters help` for a list of available commands.\n")
 
-		return errors.New("bad usage")
+		return fmt.Errorf("")
 	}
 
 	return nil
