@@ -8,6 +8,7 @@ import (
 	"time"
 
 	retry "github.com/avast/retry-go"
+	"github.com/getsentry/sentry-go"
 	"github.com/levigross/grequests"
 	"github.com/mitchellh/go-wordwrap"
 )
@@ -60,6 +61,10 @@ type CreateSubmissionResponse struct {
 	ErrorMessage string `json:"error_message"`
 }
 
+type CustomError struct {
+	Message string
+}
+
 type FetchBuildStatusResponse struct {
 	Status string `json:"status"`
 
@@ -75,6 +80,10 @@ type FetchSubmissionResponse struct {
 
 type CodecraftersClient struct {
 	ServerUrl string
+}
+
+func (e *CustomError) Error() string {
+	return e.Message
 }
 
 func NewCodecraftersClient(serverUrl string) CodecraftersClient {
@@ -190,6 +199,9 @@ func (c CodecraftersClient) FetchBuild(buildId string) (FetchBuildStatusResponse
 			}
 
 			if fetchBuildResponse.Status != "failure" && fetchBuildResponse.Status != "success" {
+				customError := &CustomError{Message: "unexpected submission status: " + fetchBuildResponse.Status}
+				sentry.CaptureException(customError)
+
 				return fmt.Errorf("unexpected build status: %s", fetchBuildResponse.Status)
 			}
 
@@ -210,26 +222,34 @@ func (c CodecraftersClient) FetchBuild(buildId string) (FetchBuildStatusResponse
 }
 
 func (c CodecraftersClient) doFetchBuild(buildId string) (FetchBuildStatusResponse, error) {
-	response, err := grequests.Get(fmt.Sprintf("%s/services/cli/fetch_test_runner_build", c.ServerUrl), &grequests.RequestOptions{
-		Params: map[string]string{
-			"test_runner_build_id": buildId,
-		},
-		Headers: c.headers(),
-	})
+	attempts := 0
+	buildStatus := "not_started"
+	var fetchBuildResponse FetchBuildStatusResponse
 
-	if err != nil {
-		return FetchBuildStatusResponse{}, fmt.Errorf("failed to fetch build result from CodeCrafters: %s", err)
-	}
+	for buildStatus != "success" && buildStatus != "failure" && buildStatus != "error" && attempts < 20 {
+		response, err := grequests.Get(fmt.Sprintf("%s/services/cli/fetch_test_runner_build", c.ServerUrl), &grequests.RequestOptions{
+			Params: map[string]string{
+				"test_runner_build_id": buildId,
+			},
+			Headers: c.headers(),
+		})
 
-	if !response.Ok {
-		return FetchBuildStatusResponse{}, fmt.Errorf("failed to fetch build result from CodeCrafters. status code: %d", response.StatusCode)
-	}
+		if err != nil {
+			return FetchBuildStatusResponse{}, fmt.Errorf("failed to fetch build result from CodeCrafters: %s", err)
+		}
 
-	fetchBuildResponse := FetchBuildStatusResponse{}
+		if !response.Ok {
+			return FetchBuildStatusResponse{}, fmt.Errorf("failed to fetch build result from CodeCrafters. status code: %d", response.StatusCode)
+		}
 
-	err = json.Unmarshal(response.Bytes(), &fetchBuildResponse)
-	if err != nil {
-		return FetchBuildStatusResponse{}, fmt.Errorf("failed to fetch build result from CodeCrafters: %s", err)
+		err = json.Unmarshal(response.Bytes(), &fetchBuildResponse)
+		if err != nil {
+			return FetchBuildStatusResponse{}, fmt.Errorf("failed to fetch build result from CodeCrafters: %s", err)
+		}
+
+		buildStatus = fetchBuildResponse.Status
+		attempts += 1
+		time.Sleep(time.Duration(100*attempts) * time.Millisecond)
 	}
 
 	return fetchBuildResponse, nil
