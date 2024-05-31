@@ -8,6 +8,7 @@ import (
 	"time"
 
 	retry "github.com/avast/retry-go"
+	"github.com/getsentry/sentry-go"
 	"github.com/levigross/grequests"
 	"github.com/mitchellh/go-wordwrap"
 )
@@ -190,7 +191,10 @@ func (c CodecraftersClient) FetchBuild(buildId string) (FetchBuildStatusResponse
 			}
 
 			if fetchBuildResponse.Status != "failure" && fetchBuildResponse.Status != "success" {
-				return fmt.Errorf("unexpected build status: %s", fetchBuildResponse.Status)
+				err = fmt.Errorf("unexpected build status: %s", fetchBuildResponse.Status)
+
+				sentry.CaptureException(err)
+				return err
 			}
 
 			return nil
