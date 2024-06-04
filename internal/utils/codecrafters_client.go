@@ -199,9 +199,9 @@ func (c CodecraftersClient) FetchBuild(buildId string) (FetchBuildStatusResponse
 
 			return nil
 		},
-		retry.Attempts(5),
+		retry.Attempts(11),
 		retry.DelayType(retry.BackOffDelay),
-		retry.MaxDelay(30*time.Second),
+		retry.MaxDelay(2*time.Second),
 		retry.Delay(100*time.Millisecond),
 		retry.LastErrorOnly(true),
 	)
