@@ -2,7 +2,7 @@ package utils
 
 import "fmt"
 
-var Version string = "0"
+var Version string = "2"
 var Commit string = "unknown"
 
 func VersionString() string {
