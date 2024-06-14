@@ -191,10 +191,7 @@ func (c CodecraftersClient) FetchBuild(buildId string) (FetchBuildStatusResponse
 			}
 
 			if fetchBuildResponse.Status != "failure" && fetchBuildResponse.Status != "success" {
-				err = fmt.Errorf("unexpected build status: %s", fetchBuildResponse.Status)
-
-				sentry.CaptureException(err)
-				return err
+				return fmt.Errorf("unexpected build status: %s", fetchBuildResponse.Status)
 			}
 
 			return nil
@@ -207,6 +204,10 @@ func (c CodecraftersClient) FetchBuild(buildId string) (FetchBuildStatusResponse
 	)
 
 	if err != nil {
+		if fetchBuildResponse.Status != "failure" && fetchBuildResponse.Status != "success" {
+			sentry.CaptureException(err)
+		}
+
 		return FetchBuildStatusResponse{}, err
 	}
 
