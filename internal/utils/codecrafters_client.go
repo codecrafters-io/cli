@@ -88,13 +88,20 @@ func (c CodecraftersClient) headers() map[string]string {
 	}
 }
 
-func (c CodecraftersClient) CreateSubmission(repositoryId string, commitSha string) (CreateSubmissionResponse, error) {
+func (c CodecraftersClient) CreateSubmission(repositoryId string, commitSha string, previous bool) (CreateSubmissionResponse, error) {
+	requestBody := map[string]interface{}{
+		"repository_id":            repositoryId,
+		"commit_sha":               commitSha,
+		"should_auto_advance":      false,
+		"stage_selection_strategy": "current_and_previous_descending",
+	}
+
+	if previous {
+		requestBody["stage_selection_strategy"] = "current_and_previous_ascending"
+	}
+
 	response, err := grequests.Post(c.ServerUrl+"/services/cli/create_submission", &grequests.RequestOptions{
-		JSON: map[string]interface{}{
-			"repository_id":       repositoryId,
-			"commit_sha":          commitSha,
-			"should_auto_advance": false,
-		},
+		JSON:    requestBody,
 		Headers: c.headers(),
 	})
 

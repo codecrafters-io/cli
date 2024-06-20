@@ -76,7 +76,11 @@ func run() error {
 
 	switch cmd {
 	case "test":
-		return commands.TestCommand(ctx)
+		testCmd := flag.NewFlagSet("test", flag.ExitOnError)
+		previous := testCmd.Bool("previous", false, "run tests for the current stage and all previous stages in ascending order")
+		testCmd.Parse(flag.Args()[1:]) // parse the args after the test command
+
+		return commands.TestCommand(ctx, *previous)
 	case "submit":
 		return commands.SubmitCommand(ctx)
 	case "help",
