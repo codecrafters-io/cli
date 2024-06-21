@@ -88,7 +88,7 @@ func (c CodecraftersClient) headers() map[string]string {
 	}
 }
 
-func (c CodecraftersClient) CreateSubmission(repositoryId string, commitSha string, previous bool) (CreateSubmissionResponse, error) {
+func (c CodecraftersClient) CreateSubmission(repositoryId string, commitSha string, shouldTestPrevious bool) (CreateSubmissionResponse, error) {
 	requestBody := map[string]interface{}{
 		"repository_id":            repositoryId,
 		"commit_sha":               commitSha,
@@ -96,7 +96,7 @@ func (c CodecraftersClient) CreateSubmission(repositoryId string, commitSha stri
 		"stage_selection_strategy": "current_and_previous_descending",
 	}
 
-	if previous {
+	if shouldTestPrevious {
 		requestBody["stage_selection_strategy"] = "current_and_previous_ascending"
 	}
 

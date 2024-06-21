@@ -17,7 +17,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
-func TestCommand(ctx context.Context, previous bool) (err error) {
+func TestCommand(ctx context.Context, shouldTestPrevious bool) (err error) {
 	logger := zerolog.Ctx(ctx)
 
 	logger.Debug().Msg("test command starts")
@@ -105,7 +105,7 @@ func TestCommand(ctx context.Context, previous bool) (err error) {
 
 	logger.Debug().Msgf("creating submission for %s", tempCommitSha)
 
-	createSubmissionResponse, err := codecraftersClient.CreateSubmission(codecraftersRemote.CodecraftersRepositoryId(), tempCommitSha, previous)
+	createSubmissionResponse, err := codecraftersClient.CreateSubmission(codecraftersRemote.CodecraftersRepositoryId(), tempCommitSha, shouldTestPrevious)
 	if err != nil {
 		return fmt.Errorf("create submission: %w", err)
 	}
