@@ -91,7 +91,7 @@ func SubmitCommand(ctx context.Context) (err error) {
 
 	logger.Debug().Msgf("creating submission for %s", commitSha)
 
-	createSubmissionResponse, err := codecraftersClient.CreateSubmission(codecraftersRemote.CodecraftersRepositoryId(), commitSha)
+	createSubmissionResponse, err := codecraftersClient.CreateSubmission(codecraftersRemote.CodecraftersRepositoryId(), commitSha, false)
 	if err != nil {
 		return fmt.Errorf("create submission: %w", err)
 	}
