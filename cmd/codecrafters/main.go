@@ -24,15 +24,11 @@ USAGE
 
 EXAMPLES
   $ codecrafters test              # Run tests without committing changes
-  $ codecrafters test --previous   # Run tests for the current stage and all previous stages in ascending order
+  $ codecrafters test --previous   # Run tests for the current stage and all previous stages without comitting changes
   $ codecrafters submit            # Commit changes & submit to move to next step
 
 COMMANDS
   test:        Run tests without committing changes
-
-               Flags for test:
-               --previous   Run tests for the current stage and all previous stages in ascending order
-
   submit:      Commit changes & submit to move to next step
   help:        Show usage instructions
 
