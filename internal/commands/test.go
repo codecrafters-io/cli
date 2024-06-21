@@ -105,7 +105,13 @@ func TestCommand(ctx context.Context, shouldTestPrevious bool) (err error) {
 
 	logger.Debug().Msgf("creating submission for %s", tempCommitSha)
 
-	createSubmissionResponse, err := codecraftersClient.CreateSubmission(codecraftersRemote.CodecraftersRepositoryId(), tempCommitSha, shouldTestPrevious)
+	stageSelectionStrategy := "current_and_previous_descending"
+
+	if shouldTestPrevious {
+		stageSelectionStrategy = "current_and_previous_ascending"
+	}
+
+	createSubmissionResponse, err := codecraftersClient.CreateSubmission(codecraftersRemote.CodecraftersRepositoryId(), tempCommitSha, stageSelectionStrategy)
 	if err != nil {
 		return fmt.Errorf("create submission: %w", err)
 	}
