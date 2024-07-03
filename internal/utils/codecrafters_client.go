@@ -88,12 +88,12 @@ func (c CodecraftersClient) headers() map[string]string {
 	}
 }
 
-func (c CodecraftersClient) CreateSubmission(repositoryId string, commitSha string, stageSelectionStrategy string) (CreateSubmissionResponse, error) {
+func (c CodecraftersClient) CreateSubmission(repositoryId string, commitSha string, command string, stageSelectionStrategy string) (CreateSubmissionResponse, error) {
 	response, err := grequests.Post(c.ServerUrl+"/services/cli/create_submission", &grequests.RequestOptions{
 		JSON: map[string]interface{}{
 			"repository_id":            repositoryId,
 			"commit_sha":               commitSha,
-			"should_auto_advance":      false,
+			"command":                  command,
 			"stage_selection_strategy": stageSelectionStrategy,
 		},
 		Headers: c.headers(),
