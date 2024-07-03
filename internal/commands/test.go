@@ -105,7 +105,7 @@ func TestCommand(ctx context.Context) (err error) {
 
 	logger.Debug().Msgf("creating submission for %s", tempCommitSha)
 
-	createSubmissionResponse, err := codecraftersClient.CreateSubmission(codecraftersRemote.CodecraftersRepositoryId(), tempCommitSha)
+	createSubmissionResponse, err := codecraftersClient.CreateSubmission(codecraftersRemote.CodecraftersRepositoryId(), tempCommitSha, "test")
 	if err != nil {
 		return fmt.Errorf("create submission: %w", err)
 	}
