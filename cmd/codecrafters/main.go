@@ -23,8 +23,9 @@ USAGE
   $ codecrafters [command]
 
 EXAMPLES
-  $ codecrafters test     # Run tests without committing changes
-  $ codecrafters submit   # Commit changes & submit to move to next step
+  $ codecrafters test              # Run tests without committing changes
+  $ codecrafters test --previous   # Run tests for the current stage and all previous stages without committing changes
+  $ codecrafters submit            # Commit changes & submit to move to next step
 
 COMMANDS
   test:        Run tests without committing changes
@@ -76,7 +77,11 @@ func run() error {
 
 	switch cmd {
 	case "test":
-		return commands.TestCommand(ctx)
+		testCmd := flag.NewFlagSet("test", flag.ExitOnError)
+		shouldTestPrevious := testCmd.Bool("previous", false, "run tests for the current stage and all previous stages in ascending order")
+		testCmd.Parse(flag.Args()[1:]) // parse the args after the test command
+
+		return commands.TestCommand(ctx, *shouldTestPrevious)
 	case "submit":
 		return commands.SubmitCommand(ctx)
 	case "help",
