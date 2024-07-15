@@ -17,7 +17,7 @@ brews:
     commit_author:
       name: Paul Kuruvilla
       email: paul@codecrafters.io
-    homepage: https://codecrafters.io.io
+    homepage: https://codecrafters.io
     description: CodeCrafters CLI
     license: MIT
     # TODO: Add completions
