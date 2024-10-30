@@ -7,7 +7,7 @@ pkgbase = codecrafters-cli
 	arch = aarch64
 	license = MIT
 	depends = curl
-	source = codecrafters-cli-34.tar.gz::https://github.com/codecrafters-io/cli/releases/download/v34/v34_linux_x86_64.tar.gz
+	source = codecrafters-cli-34.tar.gz::https://github.com/codecrafters-io/cli/releases/download/v34/v34_linux_amd64.tar.gz
 	sha256sums = SKIP
 
 pkgname = codecrafters-cli
