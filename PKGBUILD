@@ -1,4 +1,3 @@
-# Maintainer: Your Name <your.email@example.com>
 pkgname=codecrafters-cli
 pkgver=34
 pkgrel=1
@@ -8,7 +7,6 @@ url="https://github.com/codecrafters-io/cli"
 license=('MIT') # Adjust according to the project's actual license
 depends=('curl')
 
-# Set architecture correctly
 _arch=$(uname -m)
 if [ "$_arch" == "x86_64" ]; then
 	_arch="amd64"
@@ -35,7 +33,6 @@ package() {
 	chmod 0755 "$pkgdir/usr/local/bin/codecrafters"
 }
 
-# Optional metadata and functionality
 post_install() {
 	echo "CodeCrafters CLI installed successfully!"
 }
