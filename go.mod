@@ -11,7 +11,8 @@ require (
 	github.com/mitchellh/go-wordwrap v1.0.1
 	github.com/otiai10/copy v1.7.0
 	github.com/rs/zerolog v1.28.0
-	github.com/stretchr/testify v1.5.1
+	github.com/sabhiram/go-gitignore v0.0.0-20210923224102-525f6e181f06
+	github.com/stretchr/testify v1.6.1
 )
 
 require (
@@ -26,5 +27,5 @@ require (
 	golang.org/x/net v0.0.0-20221002022538-bcab6841153b // indirect
 	golang.org/x/sys v0.0.0-20220928140112-f11e5e49a4ec // indirect
 	golang.org/x/text v0.3.7 // indirect
-	gopkg.in/yaml.v2 v2.4.0 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"strconv"
@@ -122,12 +121,17 @@ func TestCommand(ctx context.Context, shouldTestPrevious bool) (err error) {
 }
 
 func copyRepositoryDirToTempDir(repoDir string) (string, error) {
-	tmpDir, err := ioutil.TempDir("", "codecrafters")
+	tmpDir, err := os.MkdirTemp("", "codecrafters")
+
 	if err != nil {
 		return "", fmt.Errorf("create temp dir: %w", err)
 	}
 
-	err = cp.Copy(repoDir, tmpDir)
+	gitIgnore := utils.NewGitIgnore(repoDir)
+
+	err = cp.Copy(repoDir, tmpDir, cp.Options{
+		Skip: gitIgnore.SkipFile,
+	})
 	if err != nil {
 		return "", fmt.Errorf("copy files: %w", err)
 	}
