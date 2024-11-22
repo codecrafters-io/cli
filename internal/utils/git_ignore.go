@@ -57,7 +57,7 @@ func getGlobalGitIgnorePath() string {
 		if err != nil {
 			return ""
 		}
-		path = filepath.Join(homeDir, path[1:])
+		path = filepath.Join(homeDir, path[2:])
 	}
 
 	return path

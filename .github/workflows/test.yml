@@ -1,4 +1,4 @@
-name: Test Install Script
+name: Test
 
 on:
   pull_request:
@@ -6,16 +6,18 @@ on:
     branches: [main]
 
 jobs:
-  test:
+  run-tests:
     runs-on: ubuntu-latest
-
     steps:
-      - uses: actions/checkout@v3
-
+      - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
           go-version: "1.23"
       - run: make test
 
+  install-cli:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
       - run: dash -x install.sh
       - run: codecrafters --version
