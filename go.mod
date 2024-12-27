@@ -13,6 +13,7 @@ require (
 	github.com/mitchellh/go-wordwrap v1.0.1
 	github.com/otiai10/copy v1.7.0
 	github.com/rs/zerolog v1.28.0
+	github.com/sabhiram/go-gitignore v0.0.0-20210923224102-525f6e181f06
 	github.com/stretchr/testify v1.8.1
 )
 
