@@ -7,7 +7,7 @@ import (
 	"os"
 	"time"
 
-	logstream_consumer "github.com/codecrafters-io/logstream/consumer"
+	logstream_redis "github.com/codecrafters-io/logstream/redis"
 
 	"github.com/fatih/color"
 	"github.com/rs/zerolog"
@@ -112,7 +112,7 @@ func HandleSubmission(createSubmissionResponse CreateSubmissionResponse, ctx con
 }
 
 func streamLogs(logstreamUrl string) error {
-	consumer, err := logstream_consumer.NewConsumer(logstreamUrl, func(message string) {})
+	consumer, err := logstream_redis.NewConsumer(logstreamUrl)
 	if err != nil {
 		return fmt.Errorf("new log consumer: %w", err)
 	}
