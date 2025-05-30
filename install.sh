@@ -34,7 +34,13 @@ INSTALL_PATH=${INSTALL_PATH:-$INSTALL_DIR/codecrafters}
 
 DOWNLOAD_URL="https://github.com/codecrafters-io/cli/releases/download/${VERSION}/${VERSION}_${OS}_${ARCH}.tar.gz"
 
-echo "This script will automatically install codecrafters (${VERSION}) for you."
+if [ -f "$INSTALL_PATH" ]; then
+  ACTION="update"
+else
+  ACTION="install"
+fi
+
+echo "This script will automatically $ACTION codecrafters (${VERSION}) for you."
 echo "You will be prompted for your password by sudo if needed."
 echo "Installation path: ${INSTALL_PATH}"
 
