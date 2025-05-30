@@ -2,9 +2,8 @@
 
 set -eu
 
-# allow overriding the version
-VERSION=${CODECRAFTERS_CLI_VERSION:-v35}
-
+# Allow overriding the version
+VERSION=${CODECRAFTERS_CLI_VERSION:-$(curl -s https://api.github.com/repos/codecrafters-io/cli/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')}
 PLATFORM=$(uname -s)
 ARCH=$(uname -m)
 
