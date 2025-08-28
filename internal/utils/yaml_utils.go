@@ -17,3 +17,8 @@ func ExtractYAMLFieldValue(content, field string) string {
 	}
 	return ""
 }
+
+func ReplaceYAMLFieldValue(content, field, newValue string) string {
+	re := regexp.MustCompile(regexp.QuoteMeta(field) + `:\s*([^\n\r]+)`)
+	return re.ReplaceAllString(content, field+": "+newValue)
+}
