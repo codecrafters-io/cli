@@ -81,10 +81,7 @@ func run() error {
 	case "test":
 		testCmd := flag.NewFlagSet("test", flag.ExitOnError)
 		shouldTestPrevious := testCmd.Bool("previous", false, "run tests for the current stage and all previous stages in ascending order")
-		err := testCmd.Parse(flag.Args()[1:]) // parse the args after the test command
-		if err != nil {
-			return err
-		}
+		testCmd.Parse(flag.Args()[1:]) // parse the args after the test command
 
 		return commands.TestCommand(ctx, *shouldTestPrevious)
 	case "submit":
