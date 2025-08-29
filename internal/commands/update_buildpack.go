@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/codecrafters-io/cli/internal/utils"
 	"github.com/getsentry/sentry-go"
@@ -110,19 +109,12 @@ func UpdateBuildpackCommand(ctx context.Context) (err error) {
 	}
 
 	fmt.Printf("Current buildpack: %s\n", buildpackValue)
-	fmt.Printf("Latest buildpack: %s\n", latestBuildpack.Slug)
-	fmt.Print("Do you want to update? (Y/n): ")
+	fmt.Printf("Do you want to upgrade to %s? (Press any key to proceed, CTRL-C to cancel)\n", latestBuildpack.Slug)
 
 	reader := bufio.NewReader(os.Stdin)
-	response, err := reader.ReadString('\n')
+	_, err = reader.ReadString('\n')
 	if err != nil {
 		return fmt.Errorf("failed to read user input: %w", err)
-	}
-
-	response = strings.TrimSpace(strings.ToLower(response))
-	if response == "n" || response == "no" {
-		fmt.Println("Update cancelled.")
-		return nil
 	}
 
 	logger.Debug().Msg("calling update buildpack API")
