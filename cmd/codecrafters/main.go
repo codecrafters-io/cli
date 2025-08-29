@@ -30,8 +30,8 @@ EXAMPLES
 COMMANDS
   test:             Run tests without committing changes
   submit:           Commit changes & submit to move to next step
-  help:             Show usage instructions
   update-buildpack: Update buildpack configuration
+  help:             Show usage instructions
 
 VERSION
   %s
