@@ -82,7 +82,7 @@ debug: "false"
 buildpack: "rust-1.88"
 `
 	value := ExtractYAMLFieldValue(content, "buildpack")
-	assert.Equal(t, "\"rust-1.88\"", value)
+	assert.Equal(t, "rust-1.88", value)
 }
 
 func TestExtractYAMLFieldValueWithSingleQuotes(t *testing.T) {
@@ -91,7 +91,7 @@ debug: 'false'
 buildpack: 'rust-1.88'
 `
 	value := ExtractYAMLFieldValue(content, "buildpack")
-	assert.Equal(t, "'rust-1.88'", value)
+	assert.Equal(t, "rust-1.88", value)
 }
 
 func TestExtractYAMLFieldValueWithWeirdWhitespace(t *testing.T) {
