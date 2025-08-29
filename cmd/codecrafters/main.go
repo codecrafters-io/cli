@@ -26,12 +26,12 @@ EXAMPLES
   $ codecrafters test              # Run tests without committing changes
   $ codecrafters test --previous   # Run tests for the current stage and all previous stages without committing changes
   $ codecrafters submit            # Commit changes & submit to move to next step
-  $ codecrafters update-buildpack  # Update buildpack configuration 
 
 COMMANDS
   test:             Run tests without committing changes
   submit:           Commit changes & submit to move to next step
   help:             Show usage instructions
+  update-buildpack: Update buildpack configuration
 
 VERSION
   %s
