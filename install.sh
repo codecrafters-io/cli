@@ -2,9 +2,21 @@
 
 set -eu
 
-# allow overriding the version
-VERSION=${CODECRAFTERS_CLI_VERSION:-v35}
+# Ensure curl is installed before fetching the version
+if ! command -v curl >/dev/null; then
+  echo "error: 'curl' is required to fetch the latest version information."
+  exit 1
+fi
 
+# Allow overriding the version
+VERSION=${CODECRAFTERS_CLI_VERSION:-$(curl -s https://api.github.com/repos/codecrafters-io/cli/releases/latest \
+    | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')}
+
+# Fail early if we couldn’t extract a version
+if [ -z "$VERSION" ]; then
+  echo "error: failed to fetch the latest release tag from GitHub."
+  exit 1
+fi
 PLATFORM=$(uname -s)
 ARCH=$(uname -m)
 
@@ -35,7 +47,13 @@ INSTALL_PATH=${INSTALL_PATH:-$INSTALL_DIR/codecrafters}
 
 DOWNLOAD_URL="https://github.com/codecrafters-io/cli/releases/download/${VERSION}/${VERSION}_${OS}_${ARCH}.tar.gz"
 
-echo "This script will automatically install codecrafters (${VERSION}) for you."
+if [ -f "$INSTALL_PATH" ]; then
+  ACTION="update"
+else
+  ACTION="install"
+fi
+
+echo "This script will automatically $ACTION codecrafters (${VERSION}) for you."
 echo "You will be prompted for your password by sudo if needed."
 echo "Installation path: ${INSTALL_PATH}"
 
