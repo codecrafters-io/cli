@@ -39,6 +39,11 @@ func (m Message) Print() {
 	}
 }
 
+type BuildpackInfo struct {
+	Slug     string `json:"slug"`
+	IsLatest bool   `json:"is_latest"`
+}
+
 type CreateSubmissionResponse struct {
 	Id string `json:"id"`
 
@@ -59,6 +64,18 @@ type CreateSubmissionResponse struct {
 	// IsError is true when the submission failed to be created, and ErrorMessage is the human-friendly error message
 	IsError      bool   `json:"is_error"`
 	ErrorMessage string `json:"error_message"`
+}
+
+type FetchBuildpacksResponse struct {
+	Buildpacks   []BuildpackInfo `json:"buildpacks"`
+	ErrorMessage string          `json:"error_message"`
+	IsError      bool            `json:"is_error"`
+}
+
+type UpdateBuildpackResponse struct {
+	Buildpack    BuildpackInfo `json:"buildpack"`
+	ErrorMessage string        `json:"error_message"`
+	IsError      bool          `json:"is_error"`
 }
 
 type FetchBuildStatusResponse struct {
@@ -239,4 +256,64 @@ func (c CodecraftersClient) doFetchBuild(buildId string) (FetchBuildStatusRespon
 	}
 
 	return fetchBuildResponse, nil
+}
+
+func (c CodecraftersClient) FetchBuildpacks(repositoryId string) (FetchBuildpacksResponse, error) {
+	response, err := grequests.Get(fmt.Sprintf("%s/services/cli/fetch_buildpacks", c.ServerUrl), &grequests.RequestOptions{
+		Params: map[string]string{
+			"repository_id": repositoryId,
+		},
+		Headers: c.headers(),
+	})
+
+	if err != nil {
+		return FetchBuildpacksResponse{}, fmt.Errorf("failed to fetch buildpacks from CodeCrafters: %s", err)
+	}
+
+	if !response.Ok {
+		return FetchBuildpacksResponse{}, fmt.Errorf("failed to fetch buildpacks from CodeCrafters. status code: %d", response.StatusCode)
+	}
+
+	fetchBuildpacksResponse := FetchBuildpacksResponse{}
+
+	err = json.Unmarshal(response.Bytes(), &fetchBuildpacksResponse)
+	if err != nil {
+		return FetchBuildpacksResponse{}, fmt.Errorf("failed to fetch buildpacks from CodeCrafters: %s", err)
+	}
+
+	if fetchBuildpacksResponse.IsError {
+		return fetchBuildpacksResponse, fmt.Errorf("%s", fetchBuildpacksResponse.ErrorMessage)
+	}
+
+	return fetchBuildpacksResponse, nil
+}
+
+func (c CodecraftersClient) UpdateBuildpack(repositoryId string) (UpdateBuildpackResponse, error) {
+	response, err := grequests.Post(fmt.Sprintf("%s/services/cli/update_buildpack", c.ServerUrl), &grequests.RequestOptions{
+		JSON: map[string]interface{}{
+			"repository_id": repositoryId,
+		},
+		Headers: c.headers(),
+	})
+
+	if err != nil {
+		return UpdateBuildpackResponse{}, fmt.Errorf("failed to update buildpack: %s", err)
+	}
+
+	if !response.Ok {
+		return UpdateBuildpackResponse{}, fmt.Errorf("failed to update buildpack. status code: %d", response.StatusCode)
+	}
+
+	updateBuildpackResponse := UpdateBuildpackResponse{}
+
+	err = json.Unmarshal(response.Bytes(), &updateBuildpackResponse)
+	if err != nil {
+		return UpdateBuildpackResponse{}, fmt.Errorf("failed to parse update buildpack response: %s", err)
+	}
+
+	if updateBuildpackResponse.IsError {
+		return updateBuildpackResponse, fmt.Errorf("%s", updateBuildpackResponse.ErrorMessage)
+	}
+
+	return updateBuildpackResponse, nil
 }

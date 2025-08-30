@@ -28,9 +28,10 @@ EXAMPLES
   $ codecrafters submit            # Commit changes & submit to move to next step
 
 COMMANDS
-  test:        Run tests without committing changes
-  submit:      Commit changes & submit to move to next step
-  help:        Show usage instructions
+  test:             Run tests without committing changes
+  submit:           Commit changes & submit to move to next step
+  update-buildpack: Update buildpack configuration
+  help:             Show usage instructions
 
 VERSION
   %s
@@ -84,6 +85,8 @@ func run() error {
 		return commands.TestCommand(ctx, *shouldTestPrevious)
 	case "submit":
 		return commands.SubmitCommand(ctx)
+	case "update-buildpack":
+		return commands.UpdateBuildpackCommand(ctx)
 	case "help",
 		"": // no argument
 		flag.Usage()
