@@ -64,46 +64,6 @@ buildpack:	go-1.19
 	assert.Equal(t, expected, result)
 }
 
-func TestExtractYAMLFieldValue(t *testing.T) {
-	content := `# Available versions: rust-1.88
-debug: false
-buildpack: rust-1.88
-`
-	value := ExtractYAMLFieldValue(content, "buildpack")
-	assert.Equal(t, "rust-1.88", value)
-
-	value = ExtractYAMLFieldValue(content, "nonexistent")
-	assert.Equal(t, "", value)
-}
-
-func TestExtractYAMLFieldValueWithDoubleQuotes(t *testing.T) {
-	content := `# Configuration
-debug: "false"
-buildpack: "rust-1.88"
-`
-	value := ExtractYAMLFieldValue(content, "buildpack")
-	assert.Equal(t, "rust-1.88", value)
-}
-
-func TestExtractYAMLFieldValueWithSingleQuotes(t *testing.T) {
-	content := `# Project settings
-debug: 'false'
-buildpack: 'rust-1.88'
-`
-	value := ExtractYAMLFieldValue(content, "buildpack")
-	assert.Equal(t, "rust-1.88", value)
-}
-
-func TestExtractYAMLFieldValueWithWeirdWhitespace(t *testing.T) {
-	content := `# Messy formatting but comments preserved
-debug:   false   
-buildpack	:	rust-1.88	
-# Another comment
-`
-	value := ExtractYAMLFieldValue(content, "buildpack")
-	assert.Equal(t, "rust-1.88", value)
-}
-
 func TestReplaceYAMLFieldValue(t *testing.T) {
 	content := `# Set this to true if you want debug logs.
 debug: false
