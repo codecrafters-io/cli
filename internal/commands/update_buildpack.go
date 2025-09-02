@@ -70,7 +70,7 @@ func UpdateBuildpackCommand(ctx context.Context) (err error) {
 		return fmt.Errorf("failed to fetch repository buildpack: %w", err)
 	}
 
-	buildpackValue := repositoryBuildpackResponse.Buildpack.Slug
+	currentBuildpackSlug := repositoryBuildpackResponse.Buildpack.Slug
 
 	logger.Debug().Msg("fetching latest buildpack from server")
 
@@ -88,14 +88,14 @@ func UpdateBuildpackCommand(ctx context.Context) (err error) {
 		}
 	}
 
-	logger.Debug().Msgf("current buildpack: %s, latest buildpack: %s", buildpackValue, latestBuildpack.Slug)
+	logger.Debug().Msgf("current buildpack: %s, latest buildpack: %s", currentBuildpackSlug, latestBuildpack.Slug)
 
-	if buildpackValue == latestBuildpack.Slug {
-		fmt.Printf("Buildpack is already up to date (%s)\n", buildpackValue)
+	if currentBuildpackSlug == latestBuildpack.Slug {
+		fmt.Printf("Buildpack is already up to date (%s)\n", currentBuildpackSlug)
 		return nil
 	}
 
-	fmt.Printf("Current buildpack: %s\n", buildpackValue)
+	fmt.Printf("Current buildpack: %s\n", currentBuildpackSlug)
 	fmt.Printf("Do you want to upgrade to %s? (Press any key to proceed, CTRL-C to cancel)\n", latestBuildpack.Slug)
 
 	reader := bufio.NewReader(os.Stdin)
@@ -135,6 +135,6 @@ func UpdateBuildpackCommand(ctx context.Context) (err error) {
 		return fmt.Errorf("failed to write updated codecrafters.yml: %w", err)
 	}
 
-	fmt.Printf("Updated buildpack from %s to %s\n", buildpackValue, updateResponse.Buildpack.Slug)
+	fmt.Printf("Updated buildpack from %s to %s\n", currentBuildpackSlug, updateResponse.Buildpack.Slug)
 	return nil
 }
