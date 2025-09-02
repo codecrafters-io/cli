@@ -60,33 +60,20 @@ func UpdateBuildpackCommand(ctx context.Context) (err error) {
 
 	logger.Debug().Msgf("identified remote: %s, %s", codecraftersRemote.Name, codecraftersRemote.Url)
 
-	logger.Debug().Msg("reading and updating codecrafters.yml file")
+	logger.Debug().Msg("fetching current buildpack from server")
 
-	codecraftersYmlPath := filepath.Join(repoDir, "codecrafters.yml")
+	codecraftersClient := utils.NewCodecraftersClient(codecraftersRemote.CodecraftersServerURL())
 
-	content, err := os.ReadFile(codecraftersYmlPath)
+	repositoryBuildpackResponse, err := codecraftersClient.FetchRepositoryBuildpack(codecraftersRemote.CodecraftersRepositoryId())
 	if err != nil {
-		if os.IsNotExist(err) {
-			return fmt.Errorf("codecrafters.yml file not found in repository root")
-		}
-		return fmt.Errorf("failed to read codecrafters.yml: %w", err)
+		logger.Debug().Err(err).Msg("failed to fetch repository buildpack")
+		return fmt.Errorf("failed to fetch repository buildpack: %w", err)
 	}
 
-	updatedContent := utils.ReplaceYAMLField(string(content), "language_pack", "buildpack")
-
-	err = os.WriteFile(codecraftersYmlPath, []byte(updatedContent), 0644)
-	if err != nil {
-		return fmt.Errorf("failed to write updated codecrafters.yml: %w", err)
-	}
-
-	buildpackValue := utils.ExtractYAMLFieldValue(updatedContent, "buildpack")
-	if buildpackValue == "" {
-		return fmt.Errorf("buildpack value not found in codecrafters.yml")
-	}
+	currentBuildpackSlug := repositoryBuildpackResponse.Buildpack.Slug
 
 	logger.Debug().Msg("fetching latest buildpack from server")
 
-	codecraftersClient := utils.NewCodecraftersClient(codecraftersRemote.CodecraftersServerURL())
 	buildpacksResponse, err := codecraftersClient.FetchBuildpacks(codecraftersRemote.CodecraftersRepositoryId())
 	if err != nil {
 		logger.Debug().Err(err).Msg("failed to fetch buildpacks")
@@ -101,14 +88,14 @@ func UpdateBuildpackCommand(ctx context.Context) (err error) {
 		}
 	}
 
-	logger.Debug().Msgf("current buildpack: %s, latest buildpack: %s", buildpackValue, latestBuildpack.Slug)
+	logger.Debug().Msgf("current buildpack: %s, latest buildpack: %s", currentBuildpackSlug, latestBuildpack.Slug)
 
-	if buildpackValue == latestBuildpack.Slug {
-		fmt.Printf("Buildpack is already up to date (%s)\n", buildpackValue)
+	if currentBuildpackSlug == latestBuildpack.Slug {
+		fmt.Printf("Buildpack is already up to date (%s)\n", currentBuildpackSlug)
 		return nil
 	}
 
-	fmt.Printf("Current buildpack: %s\n", buildpackValue)
+	fmt.Printf("Current buildpack: %s\n", currentBuildpackSlug)
 	fmt.Printf("Do you want to upgrade to %s? (Press any key to proceed, CTRL-C to cancel)\n", latestBuildpack.Slug)
 
 	reader := bufio.NewReader(os.Stdin)
@@ -128,6 +115,19 @@ func UpdateBuildpackCommand(ctx context.Context) (err error) {
 		return fmt.Errorf("update failed: %s", updateResponse.ErrorMessage)
 	}
 
+	logger.Debug().Msg("reading and updating codecrafters.yml file")
+
+	codecraftersYmlPath := filepath.Join(repoDir, "codecrafters.yml")
+
+	content, err := os.ReadFile(codecraftersYmlPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return fmt.Errorf("codecrafters.yml file not found in repository root")
+		}
+		return fmt.Errorf("failed to read codecrafters.yml: %w", err)
+	}
+
+	updatedContent := utils.ReplaceYAMLField(string(content), "language_pack", "buildpack")
 	updatedContent = utils.ReplaceYAMLFieldValue(updatedContent, "buildpack", updateResponse.Buildpack.Slug)
 
 	err = os.WriteFile(codecraftersYmlPath, []byte(updatedContent), 0644)
@@ -135,6 +135,6 @@ func UpdateBuildpackCommand(ctx context.Context) (err error) {
 		return fmt.Errorf("failed to write updated codecrafters.yml: %w", err)
 	}
 
-	fmt.Printf("Updated buildpack from %s to %s\n", buildpackValue, updateResponse.Buildpack.Slug)
+	fmt.Printf("Updated buildpack from %s to %s\n", currentBuildpackSlug, updateResponse.Buildpack.Slug)
 	return nil
 }

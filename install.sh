@@ -3,7 +3,7 @@
 set -eu
 
 # allow overriding the version
-VERSION=${CODECRAFTERS_CLI_VERSION:-v35}
+VERSION=${CODECRAFTERS_CLI_VERSION:-v37}
 
 PLATFORM=$(uname -s)
 ARCH=$(uname -m)
