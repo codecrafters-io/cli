@@ -92,6 +92,7 @@ func UpdateBuildpackCommand(ctx context.Context) (err error) {
 
 	if currentBuildpackSlug == latestBuildpack.Slug {
 		fmt.Printf("Buildpack is already up to date (%s)\n", currentBuildpackSlug)
+		fmt.Println("Let us know at hello@codecrafters.io if you’d like us to upgrade the supported buildpack version.")
 		return nil
 	}
 

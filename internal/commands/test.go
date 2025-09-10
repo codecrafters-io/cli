@@ -189,8 +189,8 @@ func pushBranchToRemote(tmpDir string, remoteName string) error {
 
 func wrapError(err error, output []byte, msg string) error {
 	if _, ok := err.(*exec.ExitError); ok {
-		return fmt.Errorf("add all files: %s", output)
+		return fmt.Errorf("%s: %s. Error: %w", msg, output, err)
 	}
 
-	return fmt.Errorf("add all files: %w", err)
+	return fmt.Errorf("%s: %w", msg, err)
 }
