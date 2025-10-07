@@ -26,10 +26,12 @@ EXAMPLES
   $ codecrafters test              # Run tests without committing changes
   $ codecrafters test --previous   # Run tests for the current stage and all previous stages without committing changes
   $ codecrafters submit            # Commit changes & submit to move to next step
+  $ codecrafters docs              # View current stage instructions
 
 COMMANDS
   test:             Run tests without committing changes
   submit:           Commit changes & submit to move to next step
+  docs:             View current stage instructions
   update-buildpack: Update language version
   help:             Show usage instructions
 
@@ -85,6 +87,13 @@ func run() error {
 		return commands.TestCommand(ctx, *shouldTestPrevious)
 	case "submit":
 		return commands.SubmitCommand(ctx)
+	case "docs":
+		docsCmd := flag.NewFlagSet("docs", flag.ExitOnError)
+		stageSlug := docsCmd.String("stage", "", "view instructions for a specific stage (slug, +N, or -N)")
+		raw := docsCmd.Bool("raw", false, "print instructions without pretty-printing")
+		docsCmd.Parse(flag.Args()[1:])
+
+		return commands.DocsCommand(ctx, *stageSlug, *raw)
 	case "update-buildpack":
 		return commands.UpdateBuildpackCommand(ctx)
 	case "help",
