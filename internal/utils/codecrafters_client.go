@@ -98,14 +98,16 @@ type FetchSubmissionResponse struct {
 }
 
 type Stage struct {
-	Slug                string `json:"slug"`
-	Name                string `json:"name"`
-	IsCurrent           bool   `json:"is_current"`
+	Slug                 string `json:"slug"`
+	Name                 string `json:"name"`
+	IsCurrent            bool   `json:"is_current"`
 	InstructionsMarkdown string `json:"instructions_markdown"`
 }
 
 type FetchStageListResponse struct {
-	Stages []Stage `json:"stages"`
+	Stages       []Stage `json:"stages"`
+	ErrorMessage string  `json:"error_message"`
+	IsError      bool    `json:"is_error"`
 }
 
 type CodecraftersClient struct {
@@ -386,6 +388,10 @@ func (c CodecraftersClient) FetchStageList(repositoryId string) (FetchStageListR
 	err = json.Unmarshal(response.Bytes(), &fetchStageListResponse)
 	if err != nil {
 		return FetchStageListResponse{}, fmt.Errorf("failed to parse fetch stage list response: %s", err)
+	}
+
+	if fetchStageListResponse.IsError {
+		return fetchStageListResponse, fmt.Errorf("%s", fetchStageListResponse.ErrorMessage)
 	}
 
 	return fetchStageListResponse, nil
