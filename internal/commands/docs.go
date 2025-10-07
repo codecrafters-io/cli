@@ -32,8 +32,8 @@ func DocsCommand(ctx context.Context, stageSlug string, raw bool) (err error) {
 			return
 		}
 
-		var noRepo utils.NoCodecraftersRemoteFoundError
-		if errors.Is(err, &noRepo) {
+		var noRepo *utils.NoCodecraftersRemoteFoundError
+		if errors.As(err, &noRepo) {
 			// ignore
 			return
 		}
