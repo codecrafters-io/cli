@@ -79,7 +79,7 @@ func DocsCommand(ctx context.Context, stageSlug string, raw bool) (err error) {
 	}
 
 	if currentStageIndex == -1 {
-		return fmt.Errorf("no current stage found")
+		panic("no current stage found")
 	}
 
 	var targetStage *utils.Stage
@@ -114,7 +114,7 @@ func DocsCommand(ctx context.Context, stageSlug string, raw bool) (err error) {
 			glamour.WithAutoStyle(),
 		)
 		if err != nil {
-			return fmt.Errorf("failed to create renderer: %w", err)
+			panic(fmt.Sprintf("failed to create renderer: %v", err))
 		}
 
 		rendered, err := renderer.Render(targetStage.InstructionsMarkdown)

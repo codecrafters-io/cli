@@ -26,7 +26,6 @@ EXAMPLES
   $ codecrafters test              # Run tests without committing changes
   $ codecrafters test --previous   # Run tests for the current stage and all previous stages without committing changes
   $ codecrafters submit            # Commit changes & submit to move to next step
-  $ codecrafters docs              # View current stage instructions
 
 COMMANDS
   test:             Run tests without committing changes
