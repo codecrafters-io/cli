@@ -104,6 +104,10 @@ type Stage struct {
 	InstructionsMarkdown string `json:"instructions_markdown"`
 }
 
+func (s Stage) GetDocsMarkdown() string {
+	return fmt.Sprintf("# %s (#%s)\n\n%s", s.Name, s.Slug, s.InstructionsMarkdown)
+}
+
 type FetchStageListResponse struct {
 	Stages       []Stage `json:"stages"`
 	ErrorMessage string  `json:"error_message"`

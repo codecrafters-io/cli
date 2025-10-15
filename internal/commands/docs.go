@@ -108,7 +108,7 @@ func DocsCommand(ctx context.Context, stageSlug string, raw bool) (err error) {
 	}
 
 	if raw {
-		fmt.Println(targetStage.InstructionsMarkdown)
+		fmt.Println(targetStage.GetDocsMarkdown())
 	} else {
 		renderer, err := glamour.NewTermRenderer(
 			glamour.WithAutoStyle(),
@@ -117,7 +117,7 @@ func DocsCommand(ctx context.Context, stageSlug string, raw bool) (err error) {
 			panic(fmt.Sprintf("failed to create renderer: %v", err))
 		}
 
-		rendered, err := renderer.Render(targetStage.InstructionsMarkdown)
+		rendered, err := renderer.Render(targetStage.GetDocsMarkdown())
 		if err != nil {
 			return fmt.Errorf("failed to render markdown: %w", err)
 		}
