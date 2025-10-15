@@ -30,7 +30,7 @@ EXAMPLES
 COMMANDS
   test:             Run tests without committing changes
   submit:           Commit changes & submit to move to next step
-  docs:             View current stage instructions
+  task:             View current stage instructions
   update-buildpack: Update language version
   help:             Show usage instructions
 
@@ -86,13 +86,13 @@ func run() error {
 		return commands.TestCommand(ctx, *shouldTestPrevious)
 	case "submit":
 		return commands.SubmitCommand(ctx)
-	case "docs":
-		docsCmd := flag.NewFlagSet("docs", flag.ExitOnError)
-		stageSlug := docsCmd.String("stage", "", "view instructions for a specific stage (slug, +N, or -N)")
-		raw := docsCmd.Bool("raw", false, "print instructions without pretty-printing")
-		docsCmd.Parse(flag.Args()[1:])
+	case "task":
+		taskCmd := flag.NewFlagSet("task", flag.ExitOnError)
+		stageSlug := taskCmd.String("stage", "", "view instructions for a specific stage (slug, +N, or -N)")
+		raw := taskCmd.Bool("raw", false, "print instructions without pretty-printing")
+		taskCmd.Parse(flag.Args()[1:])
 
-		return commands.DocsCommand(ctx, *stageSlug, *raw)
+		return commands.TaskCommand(ctx, *stageSlug, *raw)
 	case "update-buildpack":
 		return commands.UpdateBuildpackCommand(ctx)
 	case "help",

@@ -12,12 +12,12 @@ import (
 	"github.com/rs/zerolog"
 )
 
-func DocsCommand(ctx context.Context, stageSlug string, raw bool) (err error) {
+func TaskCommand(ctx context.Context, stageSlug string, raw bool) (err error) {
 	logger := zerolog.Ctx(ctx)
 
-	logger.Debug().Msg("docs command starts")
+	logger.Debug().Msg("task command starts")
 	defer func() {
-		logger.Debug().Err(err).Msg("docs command ends")
+		logger.Debug().Err(err).Msg("task command ends")
 	}()
 
 	defer func() {
@@ -147,5 +147,5 @@ func buildStageError(message string, currentStageIndex int, stages []utils.Stage
 		errorMsg += fmt.Sprintf("%s%d. [%s] %s%s\n", marker, i, stage.Slug, stage.Name, offsetStr)
 	}
 
-	return fmt.Errorf(errorMsg)
+	return fmt.Errorf("%s", errorMsg)
 }
