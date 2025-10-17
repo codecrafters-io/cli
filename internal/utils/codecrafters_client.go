@@ -10,34 +10,7 @@ import (
 	retry "github.com/avast/retry-go"
 	"github.com/getsentry/sentry-go"
 	"github.com/levigross/grequests"
-	"github.com/mitchellh/go-wordwrap"
 )
-
-type Message struct {
-	Text  string `json:"text"`
-	Color string `json:"color"`
-}
-
-func (m Message) Print() {
-	wrapped := wordwrap.WrapString(m.Text, 79)
-
-	lineFormat := "%s\n"
-
-	switch m.Color {
-	case "red":
-		lineFormat = "\033[31m%s\033[0m\n"
-	case "green":
-		lineFormat = "\033[32m%s\033[0m\n"
-	case "yellow":
-		lineFormat = "\033[33m%s\033[0m\n"
-	case "blue":
-		lineFormat = "\033[34m%s\033[0m\n"
-	}
-
-	for _, line := range strings.Split(wrapped, "\n") {
-		fmt.Printf(lineFormat, line)
-	}
-}
 
 type BuildpackInfo struct {
 	Slug     string `json:"slug"`
@@ -47,23 +20,20 @@ type BuildpackInfo struct {
 type CreateSubmissionResponse struct {
 	Id string `json:"id"`
 
-	// BuildLogstreamURL is returned when the submission is waiting on a build
-	BuildID           string `json:"build_id"`
-	BuildLogstreamURL string `json:"build_logstream_url"`
+	// Actions is the list of actions to execute for this submission
+	Actions []ActionDefinition `json:"actions"`
 
 	CommitSHA string `json:"commit_sha"`
-
-	// LogstreamURL contains test logs.
-	LogstreamURL string `json:"logstream_url"`
-
-	// Messages to be displayed to the user at various stages of the submission lifecycle
-	OnInitMessages    []Message `json:"on_init_messages"`
-	OnSuccessMessages []Message `json:"on_success_messages"`
-	OnFailureMessages []Message `json:"on_failure_messages"`
 
 	// IsError is true when the submission failed to be created, and ErrorMessage is the human-friendly error message
 	IsError      bool   `json:"is_error"`
 	ErrorMessage string `json:"error_message"`
+}
+
+// ActionDefinition represents an action to execute
+type ActionDefinition struct {
+	Type string          `json:"type"`
+	Args json.RawMessage `json:"args"`
 }
 
 type FetchBuildpacksResponse struct {
