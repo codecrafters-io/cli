@@ -9,10 +9,9 @@ import (
 )
 
 type AwaitTerminalBuildStatusAction struct {
-	BuildID            string
-	OnSuccessActions   []Action
-	OnFailureActions   []Action
-	CodecraftersClient CodecraftersClient
+	BuildID          string
+	OnSuccessActions []Action
+	OnFailureActions []Action
 }
 
 type AwaitTerminalBuildStatusActionArgs struct {
@@ -47,16 +46,11 @@ func NewAwaitTerminalBuildStatusAction(argsJson json.RawMessage) (*AwaitTerminal
 		onFailureActions = append(onFailureActions, action)
 	}
 
-	// We'll need to set the CodecraftersClient later
 	return &AwaitTerminalBuildStatusAction{
 		BuildID:          awaitTerminalBuildStatusActionArgs.BuildID,
 		OnSuccessActions: onSuccessActions,
 		OnFailureActions: onFailureActions,
 	}, nil
-}
-
-func (a *AwaitTerminalBuildStatusAction) SetCodecraftersClient(client CodecraftersClient) {
-	a.CodecraftersClient = client
 }
 
 func (a *AwaitTerminalBuildStatusAction) Execute() error {
@@ -67,12 +61,10 @@ func (a *AwaitTerminalBuildStatusAction) Execute() error {
 	for buildStatus != "success" && buildStatus != "failure" && buildStatus != "error" && attempts < 20 {
 		var err error
 
-		fetchBuildResponse, err := a.CodecraftersClient.FetchBuild(a.BuildID)
+		buildStatus, err = FetchBuildStatus(a.BuildID)
 		if err != nil {
 			// We can still proceed here anyway
 			sentry.CaptureException(err)
-		} else {
-			buildStatus = fetchBuildResponse.Status
 		}
 
 		attempts += 1

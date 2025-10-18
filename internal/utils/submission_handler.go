@@ -12,25 +12,30 @@ func HandleSubmission(createSubmissionResponse CreateSubmissionResponse, ctx con
 	logger := zerolog.Ctx(ctx)
 	logger.Debug().Msgf("Handling submission with %d actions", len(createSubmissionResponse.Actions))
 
+	actions.FetchBuildStatus = func(buildId string) (string, error) {
+		resp, err := codecraftersClient.FetchBuild(buildId)
+		if err != nil {
+			return "", err
+		}
+		return resp.Status, nil
+	}
+
+	actions.FetchSubmissionStatus = func(submissionId string) (string, error) {
+		resp, err := codecraftersClient.FetchSubmission(submissionId)
+		if err != nil {
+			return "", err
+		}
+		return resp.Status, nil
+	}
+
 	// Convert action definitions to concrete actions
 	actionsToExecute := []actions.Action{}
 	for _, actionDef := range createSubmissionResponse.Actions {
-		action, err := actions.ActionFromDefinition(actions.ActionDefinition{
-			Type: actionDef.Type,
-			Args: actionDef.Args,
-		})
+		action, err := actions.ActionFromDefinition(actionDef)
 		if err != nil {
 			return fmt.Errorf("failed to create action from definition: %w", err)
 		}
 		actionsToExecute = append(actionsToExecute, action)
-	}
-
-	// Create adapter for CodecraftersClient
-	clientAdapter := &codecraftersClientAdapter{client: codecraftersClient}
-
-	// Inject CodecraftersClient into actions that need it
-	for _, action := range actionsToExecute {
-		actions.InjectCodecraftersClient(action, clientAdapter)
 	}
 
 	// Execute all actions in sequence
@@ -42,25 +47,4 @@ func HandleSubmission(createSubmissionResponse CreateSubmissionResponse, ctx con
 	}
 
 	return nil
-}
-
-// codecraftersClientAdapter adapts utils.CodecraftersClient to actions.CodecraftersClient
-type codecraftersClientAdapter struct {
-	client CodecraftersClient
-}
-
-func (a *codecraftersClientAdapter) FetchBuild(buildId string) (actions.FetchBuildStatusResponse, error) {
-	resp, err := a.client.FetchBuild(buildId)
-	if err != nil {
-		return actions.FetchBuildStatusResponse{}, err
-	}
-	return actions.FetchBuildStatusResponse{Status: resp.Status}, nil
-}
-
-func (a *codecraftersClientAdapter) FetchSubmission(submissionId string) (actions.FetchSubmissionResponse, error) {
-	resp, err := a.client.FetchSubmission(submissionId)
-	if err != nil {
-		return actions.FetchSubmissionResponse{}, err
-	}
-	return actions.FetchSubmissionResponse{Status: resp.Status}, nil
 }

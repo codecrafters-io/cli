@@ -9,10 +9,9 @@ import (
 )
 
 type AwaitTerminalSubmissionStatusAction struct {
-	SubmissionID       string
-	OnSuccessActions   []Action
-	OnFailureActions   []Action
-	CodecraftersClient CodecraftersClient
+	SubmissionID     string
+	OnSuccessActions []Action
+	OnFailureActions []Action
 }
 
 type AwaitTerminalSubmissionStatusActionArgs struct {
@@ -47,16 +46,11 @@ func NewAwaitTerminalSubmissionStatusAction(argsJson json.RawMessage) (*AwaitTer
 		onFailureActions = append(onFailureActions, action)
 	}
 
-	// We'll need to set the CodecraftersClient later
 	return &AwaitTerminalSubmissionStatusAction{
 		SubmissionID:     awaitTerminalSubmissionStatusActionArgs.SubmissionID,
 		OnSuccessActions: onSuccessActions,
 		OnFailureActions: onFailureActions,
 	}, nil
-}
-
-func (a *AwaitTerminalSubmissionStatusAction) SetCodecraftersClient(client CodecraftersClient) {
-	a.CodecraftersClient = client
 }
 
 func (a *AwaitTerminalSubmissionStatusAction) Execute() error {
@@ -66,12 +60,10 @@ func (a *AwaitTerminalSubmissionStatusAction) Execute() error {
 	for submissionStatus == "evaluating" && attempts < 10 {
 		var err error
 
-		fetchSubmissionResponse, err := a.CodecraftersClient.FetchSubmission(a.SubmissionID)
+		submissionStatus, err = FetchSubmissionStatus(a.SubmissionID)
 		if err != nil {
 			// We have retries, so we can proceed here anyway
 			sentry.CaptureException(err)
-		} else {
-			submissionStatus = fetchSubmissionResponse.Status
 		}
 
 		attempts += 1
