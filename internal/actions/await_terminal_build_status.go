@@ -88,11 +88,17 @@ func (a *AwaitTerminalBuildStatusAction) Execute() error {
 		err := fmt.Errorf("unexpected build status: %s", buildStatus)
 		sentry.CaptureException(err)
 
-		PrintMessageAction{Color: "red", Text: "We couldn't fetch the results of your build. Please try again?"}.Execute()
-		PrintMessageAction{Color: "red", Text: "Let us know at hello@codecrafters.io if this error persists."}.Execute()
+		printErr := PrintMessageAction{Color: "red", Text: "We couldn't fetch the results of your build. Please try again?"}.Execute()
+		if printErr != nil {
+			return printErr
+		}
+		printErr = PrintMessageAction{Color: "red", Text: "Let us know at hello@codecrafters.io if this error persists."}.Execute()
+		if printErr != nil {
+			return printErr
+		}
 
 		// If the build failed, we don't need to stream test logs
-		TerminateAction{ExitCode: 1}.Execute()
+		return TerminateAction{ExitCode: 1}.Execute()
 	}
 
 	return nil
