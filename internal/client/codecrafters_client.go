@@ -1,4 +1,4 @@
-package utils
+package client
 
 import (
 	"encoding/json"
@@ -7,7 +7,6 @@ import (
 	"time"
 
 	retry "github.com/avast/retry-go"
-	"github.com/codecrafters-io/cli/internal/actions"
 	"github.com/getsentry/sentry-go"
 	"github.com/levigross/grequests"
 )
@@ -21,13 +20,26 @@ type CreateSubmissionResponse struct {
 	Id string `json:"id"`
 
 	// Actions is the list of actions to execute for this submission
-	Actions []actions.ActionDefinition `json:"actions"`
+	Actions []ActionDefinition `json:"actions"`
 
 	CommitSHA string `json:"commit_sha"`
 
 	// IsError is true when the submission failed to be created, and ErrorMessage is the human-friendly error message
 	IsError      bool   `json:"is_error"`
 	ErrorMessage string `json:"error_message"`
+}
+
+type FetchBuildStatusResponse struct {
+	Status string `json:"status"`
+
+	ErrorMessage string `json:"error_message"`
+	IsError      bool   `json:"is_error"`
+}
+
+type FetchSubmissionResponse struct {
+	ErrorMessage string `json:"error_message"`
+	IsError      bool   `json:"is_error"`
+	Status       string `json:"status"`
 }
 
 type FetchBuildpacksResponse struct {
@@ -46,19 +58,6 @@ type FetchRepositoryBuildpackResponse struct {
 	Buildpack    BuildpackInfo `json:"buildpack"`
 	ErrorMessage string        `json:"error_message"`
 	IsError      bool          `json:"is_error"`
-}
-
-type FetchBuildStatusResponse struct {
-	Status string `json:"status"`
-
-	ErrorMessage string `json:"error_message"`
-	IsError      bool   `json:"is_error"`
-}
-
-type FetchSubmissionResponse struct {
-	ErrorMessage string `json:"error_message"`
-	IsError      bool   `json:"is_error"`
-	Status       string `json:"status"`
 }
 
 type Stage struct {

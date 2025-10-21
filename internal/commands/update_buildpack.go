@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/codecrafters-io/cli/internal/client"
 	"github.com/codecrafters-io/cli/internal/utils"
 	"github.com/getsentry/sentry-go"
 	"github.com/rs/zerolog"
@@ -62,7 +63,7 @@ func UpdateBuildpackCommand(ctx context.Context) (err error) {
 
 	logger.Debug().Msg("fetching current buildpack from server")
 
-	codecraftersClient := utils.NewCodecraftersClient(codecraftersRemote.CodecraftersServerURL())
+	codecraftersClient := client.NewCodecraftersClient(codecraftersRemote.CodecraftersServerURL())
 
 	repositoryBuildpackResponse, err := codecraftersClient.FetchRepositoryBuildpack(codecraftersRemote.CodecraftersRepositoryId())
 	if err != nil {
@@ -80,7 +81,7 @@ func UpdateBuildpackCommand(ctx context.Context) (err error) {
 		return fmt.Errorf("failed to fetch buildpacks: %w", err)
 	}
 
-	var latestBuildpack utils.BuildpackInfo
+	var latestBuildpack client.BuildpackInfo
 	for _, buildpack := range buildpacksResponse.Buildpacks {
 		if buildpack.IsLatest {
 			latestBuildpack = buildpack

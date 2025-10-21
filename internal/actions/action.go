@@ -1,14 +1,10 @@
 package actions
 
 import (
-	"encoding/json"
 	"fmt"
-)
 
-type ActionDefinition struct {
-	Type string          `json:"type"`
-	Args json.RawMessage `json:"args"`
-}
+	"github.com/codecrafters-io/cli/internal/client"
+)
 
 type Action interface {
 	Execute() error
@@ -20,7 +16,7 @@ var (
 	FetchSubmissionStatus func(submissionId string) (string, error)
 )
 
-func ActionFromDefinition(actionDefinition ActionDefinition) (Action, error) {
+func ActionFromDefinition(actionDefinition client.ActionDefinition) (Action, error) {
 	switch actionDefinition.Type {
 	case "await_terminal_build_status":
 		return NewAwaitTerminalBuildStatusAction(actionDefinition.Args)

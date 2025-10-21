@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/codecrafters-io/cli/internal/client"
 	"github.com/codecrafters-io/cli/internal/commands"
 	"github.com/codecrafters-io/cli/internal/utils"
 	"github.com/fatih/color"
@@ -36,7 +37,7 @@ COMMANDS
 
 VERSION
   %s
-`, utils.VersionString())
+`, client.VersionString())
 
 	}
 
@@ -50,7 +51,7 @@ VERSION
 	}
 
 	if *showVersion {
-		fmt.Println(utils.VersionString())
+		fmt.Println(client.VersionString())
 		os.Exit(0)
 	}
 

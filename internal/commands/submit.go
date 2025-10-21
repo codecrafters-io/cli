@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/codecrafters-io/cli/internal/client"
 	"github.com/codecrafters-io/cli/internal/utils"
 	"github.com/getsentry/sentry-go"
 	"github.com/rs/zerolog"
@@ -87,7 +88,7 @@ func SubmitCommand(ctx context.Context) (err error) {
 
 	logger.Debug().Msgf("pushed changes to remote branch %s", defaultBranchName)
 
-	codecraftersClient := utils.NewCodecraftersClient(codecraftersRemote.CodecraftersServerURL())
+	codecraftersClient := client.NewCodecraftersClient(codecraftersRemote.CodecraftersServerURL())
 
 	logger.Debug().Msgf("creating submission for %s", commitSha)
 

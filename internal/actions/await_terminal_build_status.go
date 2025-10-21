@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/codecrafters-io/cli/internal/client"
 	"github.com/getsentry/sentry-go"
 )
 
@@ -15,9 +16,9 @@ type AwaitTerminalBuildStatusAction struct {
 }
 
 type AwaitTerminalBuildStatusActionArgs struct {
-	BuildID          string             `json:"build_id"`
-	OnSuccessActions []ActionDefinition `json:"on_success_actions"`
-	OnFailureActions []ActionDefinition `json:"on_failure_actions"`
+	BuildID          string                   `json:"build_id"`
+	OnSuccessActions []client.ActionDefinition `json:"on_success_actions"`
+	OnFailureActions []client.ActionDefinition `json:"on_failure_actions"`
 }
 
 func NewAwaitTerminalBuildStatusAction(argsJson json.RawMessage) (*AwaitTerminalBuildStatusAction, error) {

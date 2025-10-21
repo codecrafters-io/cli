@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/charmbracelet/glamour"
+	"github.com/codecrafters-io/cli/internal/client"
 	"github.com/codecrafters-io/cli/internal/utils"
 	"github.com/getsentry/sentry-go"
 	"github.com/rs/zerolog"
@@ -59,7 +60,7 @@ func TaskCommand(ctx context.Context, stageSlug string, raw bool) (err error) {
 
 	logger.Debug().Msgf("identified remote: %s, %s", codecraftersRemote.Name, codecraftersRemote.Url)
 
-	codecraftersClient := utils.NewCodecraftersClient(codecraftersRemote.CodecraftersServerURL())
+	codecraftersClient := client.NewCodecraftersClient(codecraftersRemote.CodecraftersServerURL())
 
 	logger.Debug().Msg("fetching stage list")
 
@@ -82,7 +83,7 @@ func TaskCommand(ctx context.Context, stageSlug string, raw bool) (err error) {
 		panic("no current stage found")
 	}
 
-	var targetStage *utils.Stage
+	var targetStage *client.Stage
 
 	if stageSlug == "" {
 		targetStage = &stageListResponse.Stages[currentStageIndex]
@@ -128,7 +129,7 @@ func TaskCommand(ctx context.Context, stageSlug string, raw bool) (err error) {
 	return nil
 }
 
-func buildStageError(message string, currentStageIndex int, stages []utils.Stage) error {
+func buildStageError(message string, currentStageIndex int, stages []client.Stage) error {
 	errorMsg := fmt.Sprintf("%s.\n\n", message)
 	errorMsg += "Available stages:\n\n"
 

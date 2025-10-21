@@ -5,10 +5,11 @@ import (
 	"fmt"
 
 	"github.com/codecrafters-io/cli/internal/actions"
+	"github.com/codecrafters-io/cli/internal/client"
 	"github.com/rs/zerolog"
 )
 
-func HandleSubmission(createSubmissionResponse CreateSubmissionResponse, ctx context.Context, codecraftersClient CodecraftersClient) (err error) {
+func HandleSubmission(createSubmissionResponse client.CreateSubmissionResponse, ctx context.Context, codecraftersClient client.CodecraftersClient) (err error) {
 	logger := zerolog.Ctx(ctx)
 	logger.Debug().Msgf("Handling submission with %d actions", len(createSubmissionResponse.Actions))
 
