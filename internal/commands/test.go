@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path"
 	"strconv"
 	"strings"
 	"time"
@@ -121,7 +122,9 @@ func TestCommand(ctx context.Context, shouldTestPrevious bool) (err error) {
 }
 
 func copyRepositoryDirToTempDir(repoDir string) (string, error) {
-	tmpDir, err := os.MkdirTemp("", "codecrafters")
+    ccDir := path.Join(repoDir, ".codecrafters")
+    fmt.Println(ccDir)
+        tmpDir, err := os.MkdirTemp(ccDir, "tmp")
 
 	if err != nil {
 		return "", fmt.Errorf("create temp dir: %w", err)
@@ -130,7 +133,13 @@ func copyRepositoryDirToTempDir(repoDir string) (string, error) {
 	gitIgnore := utils.NewGitIgnore(repoDir)
 
 	err = cp.Copy(repoDir, tmpDir, cp.Options{
-		Skip: gitIgnore.SkipFile,
+	    Skip: func(p string) (bool, error) {
+		if strings.HasPrefix(p, tmpDir) {
+		    return true, nil
+		}
+
+		return gitIgnore.SkipFile(p)
+	    },
 	})
 	if err != nil {
 		return "", fmt.Errorf("copy files: %w", err)
