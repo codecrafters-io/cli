@@ -1,4 +1,4 @@
-package utils
+package commands
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
-func HandleSubmission(createSubmissionResponse client.CreateSubmissionResponse, ctx context.Context, codecraftersClient client.CodecraftersClient) (err error) {
+func handleSubmission(createSubmissionResponse client.CreateSubmissionResponse, ctx context.Context, codecraftersClient client.CodecraftersClient) (err error) {
 	logger := zerolog.Ctx(ctx)
 	logger.Debug().Msgf("Handling submission with %d actions", len(createSubmissionResponse.Actions))
 
@@ -49,3 +49,4 @@ func HandleSubmission(createSubmissionResponse client.CreateSubmissionResponse, 
 
 	return nil
 }
+

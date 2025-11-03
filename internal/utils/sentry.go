@@ -5,7 +5,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/codecrafters-io/cli/internal/client"
 	"github.com/getsentry/sentry-go"
 )
 
@@ -20,7 +19,7 @@ func InitSentry() {
 	err := sentry.Init(sentry.ClientOptions{
 		Dsn:              dsn,
 		Debug:            os.Getenv("SENTRY_DEBUG") == "1",
-		Release:          client.VersionString(),
+		Release:          VersionString(),
 		TracesSampleRate: 1.0,
 		BeforeSend:       addRemoteURL,
 	})

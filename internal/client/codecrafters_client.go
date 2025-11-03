@@ -7,6 +7,7 @@ import (
 	"time"
 
 	retry "github.com/avast/retry-go"
+	"github.com/codecrafters-io/cli/internal/utils"
 	"github.com/getsentry/sentry-go"
 	"github.com/levigross/grequests"
 )
@@ -87,7 +88,7 @@ func NewCodecraftersClient(serverUrl string) CodecraftersClient {
 
 func (c CodecraftersClient) headers() map[string]string {
 	return map[string]string{
-		"X-Codecrafters-CLI-Version": VersionString(),
+		"X-Codecrafters-CLI-Version": utils.VersionString(),
 	}
 }
 

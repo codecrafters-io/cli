@@ -99,7 +99,7 @@ func SubmitCommand(ctx context.Context) (err error) {
 
 	logger.Debug().Msgf("submission created: %v", createSubmissionResponse.Id)
 
-	return utils.HandleSubmission(createSubmissionResponse, ctx, codecraftersClient)
+	return handleSubmission(createSubmissionResponse, ctx, codecraftersClient)
 }
 
 func getCurrentBranch(repoDir string) (string, error) {
