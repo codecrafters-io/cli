@@ -24,11 +24,13 @@ func handleSubmission(createSubmissionResponse client.CreateSubmissionResponse, 
 
 	// Execute all actions in sequence
 	for i, action := range actionsToExecute {
-		utils.Logger.Debug().Msgf("Executing %s (%d/%d)", reflect.TypeOf(action).Name(), i+1, len(actionsToExecute))
+		utils.Logger.Debug().Msgf("Executing %s (%d/%d)", reflect.TypeOf(action).String(), i+1, len(actionsToExecute))
 
 		if err := action.Execute(); err != nil {
 			return fmt.Errorf("failed to execute action: %w", err)
 		}
+
+		utils.Logger.Debug().Msgf("%s completed", reflect.TypeOf(action).String())
 	}
 
 	return nil

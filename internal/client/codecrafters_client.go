@@ -168,6 +168,8 @@ func (c CodecraftersClient) FetchSubmission(submissionId string) (FetchSubmissio
 }
 
 func (c CodecraftersClient) doFetchSubmission(submissionId string) (FetchSubmissionResponse, error) {
+	utils.Logger.Debug().Msgf("GET /services/cli/fetch_submission?submission_id=%s", submissionId)
+
 	response, err := grequests.Get(fmt.Sprintf("%s/services/cli/fetch_submission", c.ServerUrl), &grequests.RequestOptions{
 		Params: map[string]string{
 			"submission_id": submissionId,
@@ -178,6 +180,8 @@ func (c CodecraftersClient) doFetchSubmission(submissionId string) (FetchSubmiss
 	if err != nil {
 		return FetchSubmissionResponse{}, fmt.Errorf("failed to fetch submission result from CodeCrafters: %s", err)
 	}
+
+	utils.Logger.Debug().Msgf("response: %s", response.String())
 
 	if !response.Ok {
 		return FetchSubmissionResponse{}, fmt.Errorf("failed to fetch submission result from CodeCrafters. status code: %d", response.StatusCode)
@@ -194,7 +198,9 @@ func (c CodecraftersClient) doFetchSubmission(submissionId string) (FetchSubmiss
 }
 
 func (c CodecraftersClient) FetchAutofixRequest(submissionId string) (FetchAutofixRequestResponse, error) {
-	response, err := grequests.Get(fmt.Sprintf("%s/services/cli/fetch_autofix_request_status", c.ServerUrl), &grequests.RequestOptions{
+	utils.Logger.Debug().Msgf("GET /services/cli/fetch_autofix_request?submission_id=%s", submissionId)
+
+	response, err := grequests.Get(fmt.Sprintf("%s/services/cli/fetch_autofix_request", c.ServerUrl), &grequests.RequestOptions{
 		Params: map[string]string{
 			"submission_id": submissionId,
 		},
@@ -204,6 +210,8 @@ func (c CodecraftersClient) FetchAutofixRequest(submissionId string) (FetchAutof
 	if err != nil {
 		return FetchAutofixRequestResponse{}, fmt.Errorf("failed to fetch autofix request status from CodeCrafters: %s", err)
 	}
+
+	utils.Logger.Debug().Msgf("response: %s", response.String())
 
 	if !response.Ok {
 		return FetchAutofixRequestResponse{}, fmt.Errorf("failed to fetch autofix request status from CodeCrafters. status code: %d", response.StatusCode)

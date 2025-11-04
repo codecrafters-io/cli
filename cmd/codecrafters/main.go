@@ -12,6 +12,8 @@ import (
 
 // Usage: codecrafters test
 func main() {
+	utils.InitLogger()
+
 	utils.InitSentry()
 	defer utils.TeardownSentry()
 

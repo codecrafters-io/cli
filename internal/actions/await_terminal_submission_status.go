@@ -3,9 +3,11 @@ package actions
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"time"
 
 	"github.com/codecrafters-io/cli/internal/client"
+	"github.com/codecrafters-io/cli/internal/utils"
 	"github.com/getsentry/sentry-go"
 )
 
@@ -77,12 +79,16 @@ func (a *AwaitTerminalSubmissionStatusAction) Execute() error {
 	switch submissionStatus {
 	case "success":
 		for _, action := range a.OnSuccessActions {
+			utils.Logger.Debug().Msgf("Executing on_success action: %s", reflect.TypeOf(action).String())
+
 			if err := action.Execute(); err != nil {
 				return err
 			}
 		}
 	case "failure":
 		for _, action := range a.OnFailureActions {
+			utils.Logger.Debug().Msgf("Executing on_failure action: %s", reflect.TypeOf(action).String())
+
 			if err := action.Execute(); err != nil {
 				return err
 			}
