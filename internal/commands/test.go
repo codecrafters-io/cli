@@ -94,6 +94,7 @@ func TestCommand(ctx context.Context, shouldTestPrevious bool) (err error) {
 
 	// Place this before the push so that it "feels" fast
 	fmt.Println("Initiating test run...")
+	fmt.Println("")
 
 	err = pushBranchToRemote(tmpDir, codecraftersRemote.Name)
 	if err != nil {
