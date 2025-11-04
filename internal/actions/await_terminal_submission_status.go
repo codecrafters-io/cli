@@ -16,7 +16,7 @@ type AwaitTerminalSubmissionStatusAction struct {
 }
 
 type AwaitTerminalSubmissionStatusActionArgs struct {
-	SubmissionID     string                   `json:"submission_id"`
+	SubmissionID     string                    `json:"submission_id"`
 	OnSuccessActions []client.ActionDefinition `json:"on_success_actions"`
 	OnFailureActions []client.ActionDefinition `json:"on_failure_actions"`
 }
@@ -61,10 +61,13 @@ func (a *AwaitTerminalSubmissionStatusAction) Execute() error {
 	for submissionStatus == "evaluating" && attempts < 10 {
 		var err error
 
-		submissionStatus, err = FetchSubmissionStatus(a.SubmissionID)
+		codecraftersClient := client.NewCodecraftersClient()
+		resp, err := codecraftersClient.FetchSubmission(a.SubmissionID)
 		if err != nil {
 			// We have retries, so we can proceed here anyway
 			sentry.CaptureException(err)
+		} else {
+			submissionStatus = resp.Status
 		}
 
 		attempts += 1

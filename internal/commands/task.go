@@ -8,6 +8,7 @@ import (
 
 	"github.com/charmbracelet/glamour"
 	"github.com/codecrafters-io/cli/internal/client"
+	"github.com/codecrafters-io/cli/internal/globals"
 	"github.com/codecrafters-io/cli/internal/utils"
 	"github.com/getsentry/sentry-go"
 	"github.com/rs/zerolog"
@@ -60,7 +61,8 @@ func TaskCommand(ctx context.Context, stageSlug string, raw bool) (err error) {
 
 	logger.Debug().Msgf("identified remote: %s, %s", codecraftersRemote.Name, codecraftersRemote.Url)
 
-	codecraftersClient := client.NewCodecraftersClient(codecraftersRemote.CodecraftersServerURL())
+	globals.SetCodecraftersServerURL(codecraftersRemote.CodecraftersServerURL())
+	codecraftersClient := client.NewCodecraftersClient()
 
 	logger.Debug().Msg("fetching stage list")
 

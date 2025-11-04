@@ -16,7 +16,7 @@ type AwaitTerminalBuildStatusAction struct {
 }
 
 type AwaitTerminalBuildStatusActionArgs struct {
-	BuildID          string                   `json:"build_id"`
+	BuildID          string                    `json:"build_id"`
 	OnSuccessActions []client.ActionDefinition `json:"on_success_actions"`
 	OnFailureActions []client.ActionDefinition `json:"on_failure_actions"`
 }
@@ -62,10 +62,13 @@ func (a *AwaitTerminalBuildStatusAction) Execute() error {
 	for buildStatus != "success" && buildStatus != "failure" && buildStatus != "error" && attempts < 20 {
 		var err error
 
-		buildStatus, err = FetchBuildStatus(a.BuildID)
+		codecraftersClient := client.NewCodecraftersClient()
+		resp, err := codecraftersClient.FetchBuild(a.BuildID)
 		if err != nil {
 			// We can still proceed here anyway
 			sentry.CaptureException(err)
+		} else {
+			buildStatus = resp.Status
 		}
 
 		attempts += 1

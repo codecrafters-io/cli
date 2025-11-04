@@ -7,6 +7,7 @@ import (
 	"time"
 
 	retry "github.com/avast/retry-go"
+	"github.com/codecrafters-io/cli/internal/globals"
 	"github.com/codecrafters-io/cli/internal/utils"
 	"github.com/getsentry/sentry-go"
 	"github.com/levigross/grequests"
@@ -82,8 +83,10 @@ type CodecraftersClient struct {
 	ServerUrl string
 }
 
-func NewCodecraftersClient(serverUrl string) CodecraftersClient {
-	return CodecraftersClient{ServerUrl: serverUrl}
+func NewCodecraftersClient() CodecraftersClient {
+	return CodecraftersClient{
+		ServerUrl: globals.GetCodecraftersServerURL(),
+	}
 }
 
 func (c CodecraftersClient) headers() map[string]string {

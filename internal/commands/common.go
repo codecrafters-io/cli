@@ -13,22 +13,6 @@ func handleSubmission(createSubmissionResponse client.CreateSubmissionResponse, 
 	logger := zerolog.Ctx(ctx)
 	logger.Debug().Msgf("Handling submission with %d actions", len(createSubmissionResponse.Actions))
 
-	actions.FetchBuildStatus = func(buildId string) (string, error) {
-		resp, err := codecraftersClient.FetchBuild(buildId)
-		if err != nil {
-			return "", err
-		}
-		return resp.Status, nil
-	}
-
-	actions.FetchSubmissionStatus = func(submissionId string) (string, error) {
-		resp, err := codecraftersClient.FetchSubmission(submissionId)
-		if err != nil {
-			return "", err
-		}
-		return resp.Status, nil
-	}
-
 	// Convert action definitions to concrete actions
 	actionsToExecute := []actions.Action{}
 	for _, actionDef := range createSubmissionResponse.Actions {
@@ -49,4 +33,3 @@ func handleSubmission(createSubmissionResponse client.CreateSubmissionResponse, 
 
 	return nil
 }
-

@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 
 	"github.com/codecrafters-io/cli/internal/client"
+	"github.com/codecrafters-io/cli/internal/globals"
 	"github.com/codecrafters-io/cli/internal/utils"
 	"github.com/getsentry/sentry-go"
 	"github.com/rs/zerolog"
@@ -63,7 +64,8 @@ func UpdateBuildpackCommand(ctx context.Context) (err error) {
 
 	logger.Debug().Msg("fetching current buildpack from server")
 
-	codecraftersClient := client.NewCodecraftersClient(codecraftersRemote.CodecraftersServerURL())
+	globals.SetCodecraftersServerURL(codecraftersRemote.CodecraftersServerURL())
+	codecraftersClient := client.NewCodecraftersClient()
 
 	repositoryBuildpackResponse, err := codecraftersClient.FetchRepositoryBuildpack(codecraftersRemote.CodecraftersRepositoryId())
 	if err != nil {

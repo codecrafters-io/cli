@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/codecrafters-io/cli/internal/client"
+	"github.com/codecrafters-io/cli/internal/globals"
 	"github.com/codecrafters-io/cli/internal/utils"
 	"github.com/getsentry/sentry-go"
 	cp "github.com/otiai10/copy"
@@ -101,7 +102,8 @@ func TestCommand(ctx context.Context, shouldTestPrevious bool) (err error) {
 
 	logger.Debug().Msgf("pushed changes to remote branch %s", tempBranchName)
 
-	codecraftersClient := client.NewCodecraftersClient(codecraftersRemote.CodecraftersServerURL())
+	globals.SetCodecraftersServerURL(codecraftersRemote.CodecraftersServerURL())
+	codecraftersClient := client.NewCodecraftersClient()
 
 	logger.Debug().Msgf("creating submission for %s", tempCommitSha)
 

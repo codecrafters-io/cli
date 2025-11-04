@@ -10,12 +10,6 @@ type Action interface {
 	Execute() error
 }
 
-// Package-level backend functions that will be set by the caller (due to import cycles)
-var (
-	FetchBuildStatus      func(buildId string) (string, error)
-	FetchSubmissionStatus func(submissionId string) (string, error)
-)
-
 func ActionFromDefinition(actionDefinition client.ActionDefinition) (Action, error) {
 	switch actionDefinition.Type {
 	case "await_terminal_build_status":
