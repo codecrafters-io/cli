@@ -18,6 +18,8 @@ func ActionFromDefinition(actionDefinition client.ActionDefinition) (Action, err
 		return NewAwaitTerminalSubmissionStatusAction(actionDefinition.Args)
 	case "await_terminal_autofix_request_status":
 		return NewAwaitTerminalAutofixRequestStatusAction(actionDefinition.Args)
+	case "execute_dynamic_actions":
+		return NewExecuteDynamicActionsAction(actionDefinition.Args)
 	case "print_message":
 		return NewPrintMessageAction(actionDefinition.Args)
 	case "sleep":
