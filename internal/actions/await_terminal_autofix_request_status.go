@@ -1,6 +1,7 @@
 package actions
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -10,15 +11,17 @@ import (
 )
 
 type AwaitTerminalAutofixRequestStatusAction struct {
-	OnFailureActions []Action
-	OnSuccessActions []Action
-	SubmissionID     string
+	InProgressActions []Action
+	OnFailureActions  []Action
+	OnSuccessActions  []Action
+	SubmissionID      string
 }
 
 type AwaitTerminalAutofixRequestStatusActionArgs struct {
-	OnFailureActions []client.ActionDefinition `json:"on_failure_actions"`
-	OnSuccessActions []client.ActionDefinition `json:"on_success_actions"`
-	SubmissionID     string                    `json:"submission_id"`
+	InProgressActions []client.ActionDefinition `json:"in_progress_actions"`
+	OnFailureActions  []client.ActionDefinition `json:"on_failure_actions"`
+	OnSuccessActions  []client.ActionDefinition `json:"on_success_actions"`
+	SubmissionID      string                    `json:"submission_id"`
 }
 
 func NewAwaitTerminalAutofixRequestStatusAction(argsJson json.RawMessage) (*AwaitTerminalAutofixRequestStatusAction, error) {
@@ -47,16 +50,40 @@ func NewAwaitTerminalAutofixRequestStatusAction(argsJson json.RawMessage) (*Awai
 		onFailureActions = append(onFailureActions, action)
 	}
 
+	inProgressActions := []Action{}
+	for _, actionDefinition := range awaitTerminalAutofixRequestStatusActionArgs.InProgressActions {
+		action, err := ActionFromDefinition(actionDefinition)
+		if err != nil {
+			return nil, err
+		}
+
+		inProgressActions = append(inProgressActions, action)
+	}
+
 	return &AwaitTerminalAutofixRequestStatusAction{
-		OnFailureActions: onFailureActions,
-		OnSuccessActions: onSuccessActions,
-		SubmissionID:     awaitTerminalAutofixRequestStatusActionArgs.SubmissionID,
+		InProgressActions: inProgressActions,
+		OnFailureActions:  onFailureActions,
+		OnSuccessActions:  onSuccessActions,
+		SubmissionID:      awaitTerminalAutofixRequestStatusActionArgs.SubmissionID,
 	}, nil
 }
 
 func (a *AwaitTerminalAutofixRequestStatusAction) Execute() error {
 	attempts := 0
 	autofixRequestStatus := "in_progress"
+
+	inProgressActionsDoneCh := make(chan bool)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	go func() {
+		if err := a.executeInProgressActions(ctx); err != nil {
+			sentry.CaptureException(err)
+		}
+
+		inProgressActionsDoneCh <- true
+	}()
 
 	// We wait for upto 60 seconds (+ the time it takes to fetch status each time)
 	for autofixRequestStatus == "in_progress" && attempts < 60 {
@@ -74,6 +101,10 @@ func (a *AwaitTerminalAutofixRequestStatusAction) Execute() error {
 		attempts += 1
 		time.Sleep(time.Second)
 	}
+
+	// Ensure interruptible actions (like printing progress bars) finish early
+	cancel()
+	<-inProgressActionsDoneCh
 
 	switch autofixRequestStatus {
 	case "success":
@@ -97,6 +128,22 @@ func (a *AwaitTerminalAutofixRequestStatusAction) Execute() error {
 
 		// This is an internal error, let's terminate
 		TerminateAction{ExitCode: 1}.Execute()
+	}
+
+	return nil
+}
+
+func (a *AwaitTerminalAutofixRequestStatusAction) executeInProgressActions(ctx context.Context) error {
+	for _, action := range a.InProgressActions {
+		if interruptibleAction, ok := action.(InterruptibleAction); ok {
+			if err := interruptibleAction.ExecuteWithContext(ctx); err != nil {
+				return err
+			}
+		} else {
+			if err := action.Execute(); err != nil {
+				return err
+			}
+		}
 	}
 
 	return nil

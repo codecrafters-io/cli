@@ -1,6 +1,7 @@
 package actions
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/codecrafters-io/cli/internal/client"
@@ -8,6 +9,11 @@ import (
 
 type Action interface {
 	Execute() error
+}
+
+type InterruptibleAction interface {
+	Action
+	ExecuteWithContext(ctx context.Context) error
 }
 
 func ActionFromDefinition(actionDefinition client.ActionDefinition) (Action, error) {
@@ -24,6 +30,8 @@ func ActionFromDefinition(actionDefinition client.ActionDefinition) (Action, err
 		return NewPrintFileDiffAction(actionDefinition.Args)
 	case "print_message":
 		return NewPrintMessageAction(actionDefinition.Args)
+	case "print_progress_bar":
+		return NewPrintProgressBarAction(actionDefinition.Args)
 	case "print_terminal_commands_box":
 		return NewPrintTerminalCommandsBoxAction(actionDefinition.Args)
 	case "sleep":
