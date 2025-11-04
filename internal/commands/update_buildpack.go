@@ -2,28 +2,26 @@ package commands
 
 import (
 	"bufio"
-	"context"
 	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 
+	"github.com/codecrafters-io/cli/internal/client"
+	"github.com/codecrafters-io/cli/internal/globals"
 	"github.com/codecrafters-io/cli/internal/utils"
 	"github.com/getsentry/sentry-go"
-	"github.com/rs/zerolog"
 )
 
-func UpdateBuildpackCommand(ctx context.Context) (err error) {
-	logger := zerolog.Ctx(ctx)
-
-	logger.Debug().Msg("update-buildpack command starts")
+func UpdateBuildpackCommand() (err error) {
+	utils.Logger.Debug().Msg("update-buildpack command starts")
 	defer func() {
-		logger.Debug().Err(err).Msg("update-buildpack command ends")
+		utils.Logger.Debug().Err(err).Msg("update-buildpack command ends")
 	}()
 
 	defer func() {
 		if p := recover(); p != nil {
-			logger.Panic().Str("panic", fmt.Sprintf("%v", p)).Stack().Msg("panic")
+			utils.Logger.Panic().Str("panic", fmt.Sprintf("%v", p)).Stack().Msg("panic")
 			sentry.CurrentHub().Recover(p)
 
 			panic(p)
@@ -42,45 +40,46 @@ func UpdateBuildpackCommand(ctx context.Context) (err error) {
 		sentry.CurrentHub().CaptureException(err)
 	}()
 
-	logger.Debug().Msg("computing repository directory")
+	utils.Logger.Debug().Msg("computing repository directory")
 
 	repoDir, err := utils.GetRepositoryDir()
 	if err != nil {
 		return err
 	}
 
-	logger.Debug().Msgf("found repository directory: %s", repoDir)
+	utils.Logger.Debug().Msgf("found repository directory: %s", repoDir)
 
-	logger.Debug().Msg("identifying remotes")
+	utils.Logger.Debug().Msg("identifying remotes")
 
 	codecraftersRemote, err := utils.IdentifyGitRemote(repoDir)
 	if err != nil {
 		return err
 	}
 
-	logger.Debug().Msgf("identified remote: %s, %s", codecraftersRemote.Name, codecraftersRemote.Url)
+	utils.Logger.Debug().Msgf("identified remote: %s, %s", codecraftersRemote.Name, codecraftersRemote.Url)
 
-	logger.Debug().Msg("fetching current buildpack from server")
+	utils.Logger.Debug().Msg("fetching current buildpack from server")
 
-	codecraftersClient := utils.NewCodecraftersClient(codecraftersRemote.CodecraftersServerURL())
+	globals.SetCodecraftersServerURL(codecraftersRemote.CodecraftersServerURL())
+	codecraftersClient := client.NewCodecraftersClient()
 
 	repositoryBuildpackResponse, err := codecraftersClient.FetchRepositoryBuildpack(codecraftersRemote.CodecraftersRepositoryId())
 	if err != nil {
-		logger.Debug().Err(err).Msg("failed to fetch repository buildpack")
+		utils.Logger.Debug().Err(err).Msg("failed to fetch repository buildpack")
 		return fmt.Errorf("failed to fetch repository buildpack: %w", err)
 	}
 
 	currentBuildpackSlug := repositoryBuildpackResponse.Buildpack.Slug
 
-	logger.Debug().Msg("fetching latest buildpack from server")
+	utils.Logger.Debug().Msg("fetching latest buildpack from server")
 
 	buildpacksResponse, err := codecraftersClient.FetchBuildpacks(codecraftersRemote.CodecraftersRepositoryId())
 	if err != nil {
-		logger.Debug().Err(err).Msg("failed to fetch buildpacks")
+		utils.Logger.Debug().Err(err).Msg("failed to fetch buildpacks")
 		return fmt.Errorf("failed to fetch buildpacks: %w", err)
 	}
 
-	var latestBuildpack utils.BuildpackInfo
+	var latestBuildpack client.BuildpackInfo
 	for _, buildpack := range buildpacksResponse.Buildpacks {
 		if buildpack.IsLatest {
 			latestBuildpack = buildpack
@@ -88,7 +87,7 @@ func UpdateBuildpackCommand(ctx context.Context) (err error) {
 		}
 	}
 
-	logger.Debug().Msgf("current buildpack: %s, latest buildpack: %s", currentBuildpackSlug, latestBuildpack.Slug)
+	utils.Logger.Debug().Msgf("current buildpack: %s, latest buildpack: %s", currentBuildpackSlug, latestBuildpack.Slug)
 
 	if currentBuildpackSlug == latestBuildpack.Slug {
 		fmt.Printf("Buildpack is already up to date (%s)\n", currentBuildpackSlug)
@@ -105,7 +104,7 @@ func UpdateBuildpackCommand(ctx context.Context) (err error) {
 		return fmt.Errorf("failed to read user input: %w", err)
 	}
 
-	logger.Debug().Msg("calling update buildpack API")
+	utils.Logger.Debug().Msg("calling update buildpack API")
 
 	updateResponse, err := codecraftersClient.UpdateBuildpack(codecraftersRemote.CodecraftersRepositoryId())
 	if err != nil {
@@ -116,7 +115,7 @@ func UpdateBuildpackCommand(ctx context.Context) (err error) {
 		return fmt.Errorf("update failed: %s", updateResponse.ErrorMessage)
 	}
 
-	logger.Debug().Msg("reading and updating codecrafters.yml file")
+	utils.Logger.Debug().Msg("reading and updating codecrafters.yml file")
 
 	codecraftersYmlPath := filepath.Join(repoDir, "codecrafters.yml")
 

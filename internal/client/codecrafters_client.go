@@ -1,43 +1,17 @@
-package utils
+package client
 
 import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"strings"
 	"time"
 
 	retry "github.com/avast/retry-go"
+	"github.com/codecrafters-io/cli/internal/globals"
+	"github.com/codecrafters-io/cli/internal/utils"
 	"github.com/getsentry/sentry-go"
 	"github.com/levigross/grequests"
-	"github.com/mitchellh/go-wordwrap"
 )
-
-type Message struct {
-	Text  string `json:"text"`
-	Color string `json:"color"`
-}
-
-func (m Message) Print() {
-	wrapped := wordwrap.WrapString(m.Text, 79)
-
-	lineFormat := "%s\n"
-
-	switch m.Color {
-	case "red":
-		lineFormat = "\033[31m%s\033[0m\n"
-	case "green":
-		lineFormat = "\033[32m%s\033[0m\n"
-	case "yellow":
-		lineFormat = "\033[33m%s\033[0m\n"
-	case "blue":
-		lineFormat = "\033[34m%s\033[0m\n"
-	}
-
-	for _, line := range strings.Split(wrapped, "\n") {
-		fmt.Printf(lineFormat, line)
-	}
-}
 
 type BuildpackInfo struct {
 	Slug     string `json:"slug"`
@@ -47,23 +21,33 @@ type BuildpackInfo struct {
 type CreateSubmissionResponse struct {
 	Id string `json:"id"`
 
-	// BuildLogstreamURL is returned when the submission is waiting on a build
-	BuildID           string `json:"build_id"`
-	BuildLogstreamURL string `json:"build_logstream_url"`
+	// Actions is the list of actions to execute for this submission
+	Actions []ActionDefinition `json:"actions"`
 
 	CommitSHA string `json:"commit_sha"`
-
-	// LogstreamURL contains test logs.
-	LogstreamURL string `json:"logstream_url"`
-
-	// Messages to be displayed to the user at various stages of the submission lifecycle
-	OnInitMessages    []Message `json:"on_init_messages"`
-	OnSuccessMessages []Message `json:"on_success_messages"`
-	OnFailureMessages []Message `json:"on_failure_messages"`
 
 	// IsError is true when the submission failed to be created, and ErrorMessage is the human-friendly error message
 	IsError      bool   `json:"is_error"`
 	ErrorMessage string `json:"error_message"`
+}
+
+type FetchBuildStatusResponse struct {
+	Status string `json:"status"`
+
+	ErrorMessage string `json:"error_message"`
+	IsError      bool   `json:"is_error"`
+}
+
+type FetchSubmissionResponse struct {
+	ErrorMessage string `json:"error_message"`
+	IsError      bool   `json:"is_error"`
+	Status       string `json:"status"`
+}
+
+type FetchAutofixRequestResponse struct {
+	ErrorMessage string `json:"error_message"`
+	IsError      bool   `json:"is_error"`
+	Status       string `json:"status"`
 }
 
 type FetchBuildpacksResponse struct {
@@ -82,19 +66,6 @@ type FetchRepositoryBuildpackResponse struct {
 	Buildpack    BuildpackInfo `json:"buildpack"`
 	ErrorMessage string        `json:"error_message"`
 	IsError      bool          `json:"is_error"`
-}
-
-type FetchBuildStatusResponse struct {
-	Status string `json:"status"`
-
-	ErrorMessage string `json:"error_message"`
-	IsError      bool   `json:"is_error"`
-}
-
-type FetchSubmissionResponse struct {
-	ErrorMessage string `json:"error_message"`
-	IsError      bool   `json:"is_error"`
-	Status       string `json:"status"`
 }
 
 type Stage struct {
@@ -118,13 +89,15 @@ type CodecraftersClient struct {
 	ServerUrl string
 }
 
-func NewCodecraftersClient(serverUrl string) CodecraftersClient {
-	return CodecraftersClient{ServerUrl: serverUrl}
+func NewCodecraftersClient() CodecraftersClient {
+	return CodecraftersClient{
+		ServerUrl: globals.GetCodecraftersServerURL(),
+	}
 }
 
 func (c CodecraftersClient) headers() map[string]string {
 	return map[string]string{
-		"X-Codecrafters-CLI-Version": VersionString(),
+		"X-Codecrafters-CLI-Version": utils.VersionString(),
 	}
 }
 
@@ -195,6 +168,8 @@ func (c CodecraftersClient) FetchSubmission(submissionId string) (FetchSubmissio
 }
 
 func (c CodecraftersClient) doFetchSubmission(submissionId string) (FetchSubmissionResponse, error) {
+	utils.Logger.Debug().Msgf("GET /services/cli/fetch_submission?submission_id=%s", submissionId)
+
 	response, err := grequests.Get(fmt.Sprintf("%s/services/cli/fetch_submission", c.ServerUrl), &grequests.RequestOptions{
 		Params: map[string]string{
 			"submission_id": submissionId,
@@ -205,6 +180,8 @@ func (c CodecraftersClient) doFetchSubmission(submissionId string) (FetchSubmiss
 	if err != nil {
 		return FetchSubmissionResponse{}, fmt.Errorf("failed to fetch submission result from CodeCrafters: %s", err)
 	}
+
+	utils.Logger.Debug().Msgf("response: %s", response.String())
 
 	if !response.Ok {
 		return FetchSubmissionResponse{}, fmt.Errorf("failed to fetch submission result from CodeCrafters. status code: %d", response.StatusCode)
@@ -218,6 +195,40 @@ func (c CodecraftersClient) doFetchSubmission(submissionId string) (FetchSubmiss
 	}
 
 	return fetchSubmissionResponse, nil
+}
+
+func (c CodecraftersClient) FetchAutofixRequest(submissionId string) (FetchAutofixRequestResponse, error) {
+	utils.Logger.Debug().Msgf("GET /services/cli/fetch_autofix_request?submission_id=%s", submissionId)
+
+	response, err := grequests.Get(fmt.Sprintf("%s/services/cli/fetch_autofix_request", c.ServerUrl), &grequests.RequestOptions{
+		Params: map[string]string{
+			"submission_id": submissionId,
+		},
+		Headers: c.headers(),
+	})
+
+	if err != nil {
+		return FetchAutofixRequestResponse{}, fmt.Errorf("failed to fetch autofix request status from CodeCrafters: %s", err)
+	}
+
+	utils.Logger.Debug().Msgf("response: %s", response.String())
+
+	if !response.Ok {
+		return FetchAutofixRequestResponse{}, fmt.Errorf("failed to fetch autofix request status from CodeCrafters. status code: %d", response.StatusCode)
+	}
+
+	fetchAutofixRequestResponse := FetchAutofixRequestResponse{}
+
+	err = json.Unmarshal(response.Bytes(), &fetchAutofixRequestResponse)
+	if err != nil {
+		return FetchAutofixRequestResponse{}, fmt.Errorf("failed to parse fetch autofix request response: %s", err)
+	}
+
+	if fetchAutofixRequestResponse.IsError {
+		return FetchAutofixRequestResponse{}, fmt.Errorf("%s", fetchAutofixRequestResponse.ErrorMessage)
+	}
+
+	return fetchAutofixRequestResponse, nil
 }
 
 func (c CodecraftersClient) FetchBuild(buildId string) (FetchBuildStatusResponse, error) {
@@ -399,4 +410,40 @@ func (c CodecraftersClient) FetchStageList(repositoryId string) (FetchStageListR
 	}
 
 	return fetchStageListResponse, nil
+}
+
+type FetchDynamicActionsResponse struct {
+	ActionDefinitions []ActionDefinition `json:"actions"`
+}
+
+func (c CodecraftersClient) FetchDynamicActions(eventName string, eventParams map[string]interface{}) (FetchDynamicActionsResponse, error) {
+	queryParams := map[string]string{
+		"event_name": eventName,
+	}
+
+	for key, value := range eventParams {
+		queryParams[fmt.Sprintf("event_params[%s]", key)] = fmt.Sprintf("%v", value)
+	}
+
+	response, err := grequests.Get(fmt.Sprintf("%s/services/cli/fetch_dynamic_actions", c.ServerUrl), &grequests.RequestOptions{
+		Params:  queryParams,
+		Headers: c.headers(),
+	})
+
+	if err != nil {
+		return FetchDynamicActionsResponse{}, fmt.Errorf("failed to fetch dynamic actions from CodeCrafters: %s", err)
+	}
+
+	if !response.Ok {
+		return FetchDynamicActionsResponse{}, fmt.Errorf("failed to fetch dynamic actions from CodeCrafters. status code: %d, body: %s", response.StatusCode, response.String())
+	}
+
+	fetchDynamicActionsResponse := FetchDynamicActionsResponse{}
+
+	err = json.Unmarshal(response.Bytes(), &fetchDynamicActionsResponse)
+	if err != nil {
+		return FetchDynamicActionsResponse{}, fmt.Errorf("failed to parse fetch dynamic actions response: %s", err)
+	}
+
+	return fetchDynamicActionsResponse, nil
 }
