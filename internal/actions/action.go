@@ -20,8 +20,12 @@ func ActionFromDefinition(actionDefinition client.ActionDefinition) (Action, err
 		return NewAwaitTerminalAutofixRequestStatusAction(actionDefinition.Args)
 	case "execute_dynamic_actions":
 		return NewExecuteDynamicActionsAction(actionDefinition.Args)
+	case "print_file_diff":
+		return NewPrintFileDiffAction(actionDefinition.Args)
 	case "print_message":
 		return NewPrintMessageAction(actionDefinition.Args)
+	case "print_terminal_commands_box":
+		return NewPrintTerminalCommandsBoxAction(actionDefinition.Args)
 	case "sleep":
 		return NewSleepAction(actionDefinition.Args)
 	case "stream_logs":
