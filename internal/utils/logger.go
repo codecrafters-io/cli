@@ -8,7 +8,13 @@ import (
 	"github.com/rs/zerolog"
 )
 
-func NewLogger() zerolog.Logger {
+var Logger zerolog.Logger
+
+func InitLogger() {
+	Logger = newLogger()
+}
+
+func newLogger() zerolog.Logger {
 	zerolog.TimeFieldFormat = time.RFC3339Nano
 
 	logWriter := zerolog.NewConsoleWriter(func(w *zerolog.ConsoleWriter) {

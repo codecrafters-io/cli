@@ -1,7 +1,6 @@
 package commands
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -15,20 +14,17 @@ import (
 	"github.com/codecrafters-io/cli/internal/utils"
 	"github.com/getsentry/sentry-go"
 	cp "github.com/otiai10/copy"
-	"github.com/rs/zerolog"
 )
 
-func TestCommand(ctx context.Context, shouldTestPrevious bool) (err error) {
-	logger := zerolog.Ctx(ctx)
-
-	logger.Debug().Msg("test command starts")
+func TestCommand(shouldTestPrevious bool) (err error) {
+	utils.Logger.Debug().Msg("test command starts")
 	defer func() {
-		logger.Debug().Err(err).Msg("test command ends")
+		utils.Logger.Debug().Err(err).Msg("test command ends")
 	}()
 
 	defer func() {
 		if p := recover(); p != nil {
-			logger.Panic().Str("panic", fmt.Sprintf("%v", p)).Stack().Msg("panic")
+			utils.Logger.Panic().Str("panic", fmt.Sprintf("%v", p)).Stack().Msg("panic")
 			sentry.CurrentHub().Recover(p)
 
 			panic(p)
@@ -47,25 +43,25 @@ func TestCommand(ctx context.Context, shouldTestPrevious bool) (err error) {
 		sentry.CurrentHub().CaptureException(err)
 	}()
 
-	logger.Debug().Msg("computing repository directory")
+	utils.Logger.Debug().Msg("computing repository directory")
 
 	repoDir, err := utils.GetRepositoryDir()
 	if err != nil {
 		return err
 	}
 
-	logger.Debug().Msgf("found repository directory: %s", repoDir)
+	utils.Logger.Debug().Msgf("found repository directory: %s", repoDir)
 
-	logger.Debug().Msg("identifying remotes")
+	utils.Logger.Debug().Msg("identifying remotes")
 
 	codecraftersRemote, err := utils.IdentifyGitRemote(repoDir)
 	if err != nil {
 		return err
 	}
 
-	logger.Debug().Msgf("identified remote: %s, %s", codecraftersRemote.Name, codecraftersRemote.Url)
+	utils.Logger.Debug().Msgf("identified remote: %s, %s", codecraftersRemote.Name, codecraftersRemote.Url)
 
-	logger.Debug().Msg("copying repository to temp directory")
+	utils.Logger.Debug().Msg("copying repository to temp directory")
 
 	tmpDir, err := copyRepositoryDirToTempDir(repoDir)
 	if err != nil {
@@ -74,18 +70,18 @@ func TestCommand(ctx context.Context, shouldTestPrevious bool) (err error) {
 
 	defer os.RemoveAll(tmpDir)
 
-	logger.Debug().Msgf("copied repository to temp directory: %s", tmpDir)
+	utils.Logger.Debug().Msgf("copied repository to temp directory: %s", tmpDir)
 
 	tempBranchName := "cli-test-" + strconv.FormatInt(time.Now().UnixMilli(), 10)
 
-	logger.Debug().Msgf("creating temp branch: %s", tempBranchName)
+	utils.Logger.Debug().Msgf("creating temp branch: %s", tempBranchName)
 
 	err = checkoutNewBranch(tempBranchName, tmpDir)
 	if err != nil {
 		return fmt.Errorf("create temp branch: %w", err)
 	}
 
-	logger.Debug().Msgf("committing changes to %s", tempBranchName)
+	utils.Logger.Debug().Msgf("committing changes to %s", tempBranchName)
 
 	tempCommitSha, err := commitChanges(tmpDir, fmt.Sprintf("CLI tests (%s)", tempBranchName))
 	if err != nil {
@@ -101,12 +97,12 @@ func TestCommand(ctx context.Context, shouldTestPrevious bool) (err error) {
 		return fmt.Errorf("push changes: %w", err)
 	}
 
-	logger.Debug().Msgf("pushed changes to remote branch %s", tempBranchName)
+	utils.Logger.Debug().Msgf("pushed changes to remote branch %s", tempBranchName)
 
 	globals.SetCodecraftersServerURL(codecraftersRemote.CodecraftersServerURL())
 	codecraftersClient := client.NewCodecraftersClient()
 
-	logger.Debug().Msgf("creating submission for %s", tempCommitSha)
+	utils.Logger.Debug().Msgf("creating submission for %s", tempCommitSha)
 
 	stageSelectionStrategy := "current_and_previous_descending"
 
@@ -119,9 +115,9 @@ func TestCommand(ctx context.Context, shouldTestPrevious bool) (err error) {
 		return fmt.Errorf("create submission: %w", err)
 	}
 
-	logger.Debug().Msgf("submission created: %v", createSubmissionResponse.Id)
+	utils.Logger.Debug().Msgf("submission created: %v", createSubmissionResponse.Id)
 
-	return handleSubmission(createSubmissionResponse, ctx, codecraftersClient)
+	return handleSubmission(createSubmissionResponse, codecraftersClient)
 }
 
 func copyRepositoryDirToTempDir(repoDir string) (string, error) {

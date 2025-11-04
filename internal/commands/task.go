@@ -1,7 +1,6 @@
 package commands
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"strconv"
@@ -11,20 +10,18 @@ import (
 	"github.com/codecrafters-io/cli/internal/globals"
 	"github.com/codecrafters-io/cli/internal/utils"
 	"github.com/getsentry/sentry-go"
-	"github.com/rs/zerolog"
 )
 
-func TaskCommand(ctx context.Context, stageSlug string, raw bool) (err error) {
-	logger := zerolog.Ctx(ctx)
+func TaskCommand(stageSlug string, raw bool) (err error) {
+	utils.Logger.Debug().Msg("task command starts")
 
-	logger.Debug().Msg("task command starts")
 	defer func() {
-		logger.Debug().Err(err).Msg("task command ends")
+		utils.Logger.Debug().Err(err).Msg("task command ends")
 	}()
 
 	defer func() {
 		if p := recover(); p != nil {
-			logger.Panic().Str("panic", fmt.Sprintf("%v", p)).Stack().Msg("panic")
+			utils.Logger.Panic().Str("panic", fmt.Sprintf("%v", p)).Stack().Msg("panic")
 			sentry.CurrentHub().Recover(p)
 
 			panic(p)
@@ -43,35 +40,35 @@ func TaskCommand(ctx context.Context, stageSlug string, raw bool) (err error) {
 		sentry.CurrentHub().CaptureException(err)
 	}()
 
-	logger.Debug().Msg("computing repository directory")
+	utils.Logger.Debug().Msg("computing repository directory")
 
 	repoDir, err := utils.GetRepositoryDir()
 	if err != nil {
 		return err
 	}
 
-	logger.Debug().Msgf("found repository directory: %s", repoDir)
+	utils.Logger.Debug().Msgf("found repository directory: %s", repoDir)
 
-	logger.Debug().Msg("identifying remotes")
+	utils.Logger.Debug().Msg("identifying remotes")
 
 	codecraftersRemote, err := utils.IdentifyGitRemote(repoDir)
 	if err != nil {
 		return err
 	}
 
-	logger.Debug().Msgf("identified remote: %s, %s", codecraftersRemote.Name, codecraftersRemote.Url)
+	utils.Logger.Debug().Msgf("identified remote: %s, %s", codecraftersRemote.Name, codecraftersRemote.Url)
 
 	globals.SetCodecraftersServerURL(codecraftersRemote.CodecraftersServerURL())
 	codecraftersClient := client.NewCodecraftersClient()
 
-	logger.Debug().Msg("fetching stage list")
+	utils.Logger.Debug().Msg("fetching stage list")
 
 	stageListResponse, err := codecraftersClient.FetchStageList(codecraftersRemote.CodecraftersRepositoryId())
 	if err != nil {
 		return fmt.Errorf("fetch stage list: %w", err)
 	}
 
-	logger.Debug().Msgf("fetched %d stages", len(stageListResponse.Stages))
+	utils.Logger.Debug().Msgf("fetched %d stages", len(stageListResponse.Stages))
 
 	var currentStageIndex int = -1
 	for i := range stageListResponse.Stages {

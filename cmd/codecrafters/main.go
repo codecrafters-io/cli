@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"flag"
 	"fmt"
 	"os"
@@ -69,13 +68,8 @@ VERSION
 }
 
 func run() error {
-	ctx := context.Background()
-	logger := utils.NewLogger()
 	cmd := flag.Arg(0)
-
-	logger.Debug().Msgf("Running command: %s", cmd)
-
-	ctx = logger.WithContext(ctx)
+	utils.Logger.Debug().Msgf("Running command: %s", cmd)
 
 	switch cmd {
 	case "test":
@@ -83,18 +77,18 @@ func run() error {
 		shouldTestPrevious := testCmd.Bool("previous", false, "run tests for the current stage and all previous stages in ascending order")
 		testCmd.Parse(flag.Args()[1:]) // parse the args after the test command
 
-		return commands.TestCommand(ctx, *shouldTestPrevious)
+		return commands.TestCommand(*shouldTestPrevious)
 	case "submit":
-		return commands.SubmitCommand(ctx)
+		return commands.SubmitCommand()
 	case "task":
 		taskCmd := flag.NewFlagSet("task", flag.ExitOnError)
 		stageSlug := taskCmd.String("stage", "", "view instructions for a specific stage (slug, +N, or -N)")
 		raw := taskCmd.Bool("raw", false, "print instructions without pretty-printing")
 		taskCmd.Parse(flag.Args()[1:])
 
-		return commands.TaskCommand(ctx, *stageSlug, *raw)
+		return commands.TaskCommand(*stageSlug, *raw)
 	case "update-buildpack":
-		return commands.UpdateBuildpackCommand(ctx)
+		return commands.UpdateBuildpackCommand()
 	case "help",
 		"": // no argument
 		flag.Usage()

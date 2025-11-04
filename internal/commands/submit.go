@@ -1,7 +1,6 @@
 package commands
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"os/exec"
@@ -11,20 +10,18 @@ import (
 	"github.com/codecrafters-io/cli/internal/globals"
 	"github.com/codecrafters-io/cli/internal/utils"
 	"github.com/getsentry/sentry-go"
-	"github.com/rs/zerolog"
 )
 
-func SubmitCommand(ctx context.Context) (err error) {
-	logger := zerolog.Ctx(ctx)
+func SubmitCommand() (err error) {
+	utils.Logger.Debug().Msg("submit command starts")
 
-	logger.Debug().Msg("submit command starts")
 	defer func() {
-		logger.Debug().Err(err).Msg("submit command ends")
+		utils.Logger.Debug().Err(err).Msg("submit command ends")
 	}()
 
 	defer func() {
 		if p := recover(); p != nil {
-			logger.Panic().Str("panic", fmt.Sprintf("%v", p)).Stack().Msg("panic")
+			utils.Logger.Panic().Str("panic", fmt.Sprintf("%v", p)).Stack().Msg("panic")
 			sentry.CurrentHub().Recover(p)
 
 			panic(p)
@@ -43,23 +40,23 @@ func SubmitCommand(ctx context.Context) (err error) {
 		sentry.CurrentHub().CaptureException(err)
 	}()
 
-	logger.Debug().Msg("computing repository directory")
+	utils.Logger.Debug().Msg("computing repository directory")
 
 	repoDir, err := utils.GetRepositoryDir()
 	if err != nil {
 		return err
 	}
 
-	logger.Debug().Msgf("found repository directory: %s", repoDir)
+	utils.Logger.Debug().Msgf("found repository directory: %s", repoDir)
 
-	logger.Debug().Msg("identifying remotes")
+	utils.Logger.Debug().Msg("identifying remotes")
 
 	codecraftersRemote, err := utils.IdentifyGitRemote(repoDir)
 	if err != nil {
 		return err
 	}
 
-	logger.Debug().Msgf("identified remote: %s, %s", codecraftersRemote.Name, codecraftersRemote.Url)
+	utils.Logger.Debug().Msgf("identified remote: %s, %s", codecraftersRemote.Name, codecraftersRemote.Url)
 
 	currentBranchName, err := getCurrentBranch(repoDir)
 	if err != nil {
@@ -72,7 +69,7 @@ func SubmitCommand(ctx context.Context) (err error) {
 		return fmt.Errorf("You need to be on the `%s` branch to run this command.", defaultBranchName)
 	}
 
-	logger.Debug().Msgf("committing changes to %s", defaultBranchName)
+	utils.Logger.Debug().Msgf("committing changes to %s", defaultBranchName)
 
 	commitSha, err := commitChanges(repoDir, "codecrafters submit [skip ci]")
 	if err != nil {
@@ -87,21 +84,21 @@ func SubmitCommand(ctx context.Context) (err error) {
 		return fmt.Errorf("push changes: %w", err)
 	}
 
-	logger.Debug().Msgf("pushed changes to remote branch %s", defaultBranchName)
+	utils.Logger.Debug().Msgf("pushed changes to remote branch %s", defaultBranchName)
 
 	globals.SetCodecraftersServerURL(codecraftersRemote.CodecraftersServerURL())
 	codecraftersClient := client.NewCodecraftersClient()
 
-	logger.Debug().Msgf("creating submission for %s", commitSha)
+	utils.Logger.Debug().Msgf("creating submission for %s", commitSha)
 
 	createSubmissionResponse, err := codecraftersClient.CreateSubmission(codecraftersRemote.CodecraftersRepositoryId(), commitSha, "submit", "current_and_previous_descending")
 	if err != nil {
 		return fmt.Errorf("create submission: %w", err)
 	}
 
-	logger.Debug().Msgf("submission created: %v", createSubmissionResponse.Id)
+	utils.Logger.Debug().Msgf("submission created: %v", createSubmissionResponse.Id)
 
-	return handleSubmission(createSubmissionResponse, ctx, codecraftersClient)
+	return handleSubmission(createSubmissionResponse, codecraftersClient)
 }
 
 func getCurrentBranch(repoDir string) (string, error) {
