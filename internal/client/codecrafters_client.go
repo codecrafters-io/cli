@@ -44,6 +44,12 @@ type FetchSubmissionResponse struct {
 	Status       string `json:"status"`
 }
 
+type FetchAutofixRequestStatusResponse struct {
+	ErrorMessage string `json:"error_message"`
+	IsError      bool   `json:"is_error"`
+	Status       string `json:"status"`
+}
+
 type FetchBuildpacksResponse struct {
 	Buildpacks   []BuildpackInfo `json:"buildpacks"`
 	ErrorMessage string          `json:"error_message"`
@@ -185,6 +191,36 @@ func (c CodecraftersClient) doFetchSubmission(submissionId string) (FetchSubmiss
 	}
 
 	return fetchSubmissionResponse, nil
+}
+
+func (c CodecraftersClient) FetchAutofixRequestStatus(submissionId string) (string, error) {
+	response, err := grequests.Get(fmt.Sprintf("%s/services/cli/fetch_autofix_request_status", c.ServerUrl), &grequests.RequestOptions{
+		Params: map[string]string{
+			"submission_id": submissionId,
+		},
+		Headers: c.headers(),
+	})
+
+	if err != nil {
+		return "", fmt.Errorf("failed to fetch autofix request status from CodeCrafters: %s", err)
+	}
+
+	if !response.Ok {
+		return "", fmt.Errorf("failed to fetch autofix request status from CodeCrafters. status code: %d", response.StatusCode)
+	}
+
+	fetchAutofixRequestStatusResponse := FetchAutofixRequestStatusResponse{}
+
+	err = json.Unmarshal(response.Bytes(), &fetchAutofixRequestStatusResponse)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse fetch autofix request status response: %s", err)
+	}
+
+	if fetchAutofixRequestStatusResponse.IsError {
+		return "", fmt.Errorf("%s", fetchAutofixRequestStatusResponse.ErrorMessage)
+	}
+
+	return fetchAutofixRequestStatusResponse.Status, nil
 }
 
 func (c CodecraftersClient) FetchBuild(buildId string) (FetchBuildStatusResponse, error) {

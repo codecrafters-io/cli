@@ -16,6 +16,8 @@ func ActionFromDefinition(actionDefinition client.ActionDefinition) (Action, err
 		return NewAwaitTerminalBuildStatusAction(actionDefinition.Args)
 	case "await_terminal_submission_status":
 		return NewAwaitTerminalSubmissionStatusAction(actionDefinition.Args)
+	case "await_terminal_autofix_request_status":
+		return NewAwaitTerminalAutofixRequestStatusAction(actionDefinition.Args)
 	case "print_message":
 		return NewPrintMessageAction(actionDefinition.Args)
 	case "sleep":
