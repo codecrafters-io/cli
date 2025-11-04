@@ -44,7 +44,7 @@ type FetchSubmissionResponse struct {
 	Status       string `json:"status"`
 }
 
-type FetchAutofixRequestStatusResponse struct {
+type FetchAutofixRequestResponse struct {
 	ErrorMessage string `json:"error_message"`
 	IsError      bool   `json:"is_error"`
 	Status       string `json:"status"`
@@ -193,7 +193,7 @@ func (c CodecraftersClient) doFetchSubmission(submissionId string) (FetchSubmiss
 	return fetchSubmissionResponse, nil
 }
 
-func (c CodecraftersClient) FetchAutofixRequestStatus(submissionId string) (string, error) {
+func (c CodecraftersClient) FetchAutofixRequest(submissionId string) (FetchAutofixRequestResponse, error) {
 	response, err := grequests.Get(fmt.Sprintf("%s/services/cli/fetch_autofix_request_status", c.ServerUrl), &grequests.RequestOptions{
 		Params: map[string]string{
 			"submission_id": submissionId,
@@ -202,25 +202,25 @@ func (c CodecraftersClient) FetchAutofixRequestStatus(submissionId string) (stri
 	})
 
 	if err != nil {
-		return "", fmt.Errorf("failed to fetch autofix request status from CodeCrafters: %s", err)
+		return FetchAutofixRequestResponse{}, fmt.Errorf("failed to fetch autofix request status from CodeCrafters: %s", err)
 	}
 
 	if !response.Ok {
-		return "", fmt.Errorf("failed to fetch autofix request status from CodeCrafters. status code: %d", response.StatusCode)
+		return FetchAutofixRequestResponse{}, fmt.Errorf("failed to fetch autofix request status from CodeCrafters. status code: %d", response.StatusCode)
 	}
 
-	fetchAutofixRequestStatusResponse := FetchAutofixRequestStatusResponse{}
+	fetchAutofixRequestResponse := FetchAutofixRequestResponse{}
 
-	err = json.Unmarshal(response.Bytes(), &fetchAutofixRequestStatusResponse)
+	err = json.Unmarshal(response.Bytes(), &fetchAutofixRequestResponse)
 	if err != nil {
-		return "", fmt.Errorf("failed to parse fetch autofix request status response: %s", err)
+		return FetchAutofixRequestResponse{}, fmt.Errorf("failed to parse fetch autofix request response: %s", err)
 	}
 
-	if fetchAutofixRequestStatusResponse.IsError {
-		return "", fmt.Errorf("%s", fetchAutofixRequestStatusResponse.ErrorMessage)
+	if fetchAutofixRequestResponse.IsError {
+		return FetchAutofixRequestResponse{}, fmt.Errorf("%s", fetchAutofixRequestResponse.ErrorMessage)
 	}
 
-	return fetchAutofixRequestStatusResponse.Status, nil
+	return fetchAutofixRequestResponse, nil
 }
 
 func (c CodecraftersClient) FetchBuild(buildId string) (FetchBuildStatusResponse, error) {

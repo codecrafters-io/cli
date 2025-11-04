@@ -63,12 +63,12 @@ func (a *AwaitTerminalAutofixRequestStatusAction) Execute() error {
 		var err error
 
 		codecraftersClient := client.NewCodecraftersClient()
-		newStatus, err := codecraftersClient.FetchAutofixRequestStatus(a.SubmissionID)
+		autofixRequestStatusResponse, err := codecraftersClient.FetchAutofixRequest(a.SubmissionID)
 		if err != nil {
 			// We can still proceed here anyway
 			sentry.CaptureException(err)
 		} else {
-			autofixRequestStatus = newStatus
+			autofixRequestStatus = autofixRequestStatusResponse.Status
 		}
 
 		attempts += 1
