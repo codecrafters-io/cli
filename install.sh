@@ -71,6 +71,7 @@ tar xzf "$TEMP_FILE" -C "$TEMP_FOLDER" codecrafters
 
 chmod 0755 "$TEMP_FOLDER/codecrafters"
 
+mkdir -p "$INSTALL_DIR"
 if ! mv "$TEMP_FOLDER/codecrafters" "$INSTALL_PATH" 2>/dev/null; then
   sudo -k mv "$TEMP_FOLDER/codecrafters" "$INSTALL_PATH"
 fi
