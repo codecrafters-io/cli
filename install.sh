@@ -71,19 +71,13 @@ tar xzf "$TEMP_FILE" -C "$TEMP_FOLDER" codecrafters
 
 chmod 0755 "$TEMP_FOLDER/codecrafters"
 
-ASKED_FOR_PASSWORD=false # Don't want to ask for password more than once
 if ! mkdir -p "$INSTALL_DIR" 2>/dev/null; then
   echo "Password required to create directory ${INSTALL_DIR}"
   sudo -k mkdir -p "$INSTALL_DIR"
-  ASKED_FOR_PASSWORD=true
 fi
 if ! mv "$TEMP_FOLDER/codecrafters" "$INSTALL_PATH" 2>/dev/null; then
-  if [ "$ASKED_FOR_PASSWORD" = true ]; then
-    sudo mv "$TEMP_FOLDER/codecrafters" "$INSTALL_PATH"
-  else
-    echo "Password required to install codecrafters binary to ${INSTALL_DIR}"
-    sudo -k mv "$TEMP_FOLDER/codecrafters" "$INSTALL_PATH"
-  fi
+  echo "Password required to install codecrafters binary to ${INSTALL_DIR}"
+  sudo -k mv "$TEMP_FOLDER/codecrafters" "$INSTALL_PATH"
 fi
 
 echo "Installed $("$INSTALL_PATH" --version)"
