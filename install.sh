@@ -72,11 +72,9 @@ tar xzf "$TEMP_FILE" -C "$TEMP_FOLDER" codecrafters
 chmod 0755 "$TEMP_FOLDER/codecrafters"
 
 if ! mkdir -p "$INSTALL_DIR" 2>/dev/null; then
-  echo "Password required to create directory ${INSTALL_DIR}"
   sudo -k mkdir -p "$INSTALL_DIR"
 fi
 if ! mv "$TEMP_FOLDER/codecrafters" "$INSTALL_PATH" 2>/dev/null; then
-  echo "Password required to install codecrafters binary to ${INSTALL_DIR}"
   sudo -k mv "$TEMP_FOLDER/codecrafters" "$INSTALL_PATH"
 fi
 
