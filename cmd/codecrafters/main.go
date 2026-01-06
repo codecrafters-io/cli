@@ -33,6 +33,7 @@ COMMANDS
   submit:           Commit changes & submit to move to next step
   task:             View current stage instructions
   update-buildpack: Update language version
+  ping:             Test the connection to a CodeCrafters repository
   help:             Show usage instructions
 
 VERSION
@@ -91,6 +92,8 @@ func run() error {
 		return commands.TaskCommand(*stageSlug, *raw)
 	case "update-buildpack":
 		return commands.UpdateBuildpackCommand()
+	case "ping":
+		return commands.PingCommand()
 	case "help",
 		"": // no argument
 		flag.Usage()
