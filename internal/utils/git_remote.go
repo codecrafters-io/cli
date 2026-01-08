@@ -21,7 +21,7 @@ func (r GitRemote) CodecraftersRepositoryId() string {
 }
 
 func (r GitRemote) CodecraftersServerURL() string {
-	if strings.Contains(r.Url, "git.codecrafters.io") {
+	if strings.Contains(r.Url, "git.codecrafters.io") || strings.Contains(r.Url, "git2.codecrafters.io") {
 		return "https://backend.codecrafters.io"
 	}
 
