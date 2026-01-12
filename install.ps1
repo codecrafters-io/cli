@@ -51,7 +51,8 @@ try {
 
     $UserPath = [Environment]::GetEnvironmentVariable("Path", "User")
     if ($UserPath -notlike "*$InstallDir*") {
-        [Environment]::SetEnvironmentVariable("Path", "$UserPath;$InstallDir", "User")
+        $NewUserPath = if ($UserPath) { "$UserPath;$InstallDir" } else { $InstallDir }
+        [Environment]::SetEnvironmentVariable("Path", $NewUserPath, "User")
         $env:Path += ";$InstallDir" 
     }
     Write-Host "Done!"
