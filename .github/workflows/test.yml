@@ -15,9 +15,16 @@ jobs:
           go-version: "1.23"
       - run: make test
 
-  install-cli:
+  install-cli-linux:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - run: dash -x install.sh
+      - run: codecrafters --version
+
+  install-cli-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: powershell -ExecutionPolicy Bypass -File install.ps1
       - run: codecrafters --version
