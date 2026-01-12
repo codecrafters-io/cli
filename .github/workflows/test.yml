@@ -26,5 +26,7 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-      - run: powershell -ExecutionPolicy Bypass -File install.ps1
-      - run: codecrafters --version
+      - run: |
+          . .\install.ps1
+          codecrafters --version
+        shell: pwsh
