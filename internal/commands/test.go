@@ -134,7 +134,7 @@ func copyRepositoryDirToTempDir(repoDir string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("list temp dir: %w", err)
 	}
-	fmt.Println("⛳ ls -la ", repoDir, ":", string(lsOutput))
+	fmt.Println("⛳ ls -la ", tmpDir, ":", string(lsOutput))
 
 	err = cp.Copy(repoDir, tmpDir, cp.Options{
 		Skip: gitIgnore.SkipFile,

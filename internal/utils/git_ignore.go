@@ -18,6 +18,19 @@ type GitIgnore struct {
 }
 
 func NewGitIgnore(baseDir string) GitIgnore {
+	localPath := filepath.Join(baseDir, ".gitignore")
+	globalPath := getGlobalGitIgnorePath()
+	excludePath := filepath.Join(baseDir, ".git", "info", "exclude")
+
+	println("⛳ localGitIgnore path:", localPath)
+	println("⛳ localGitIgnore content:\n", readFileContent(localPath))
+
+	println("⛳ globalGitIgnore path:", globalPath)
+	println("⛳ globalGitIgnore content:\n", readFileContent(globalPath))
+
+	println("⛳ gitInfoExclude path:", excludePath)
+	println("⛳ gitInfoExclude content:\n", readFileContent(excludePath))
+
 	return GitIgnore{
 		baseDir:         baseDir,
 		localGitIgnore:  compileIgnorer(filepath.Join(baseDir, ".gitignore")),
@@ -43,6 +56,14 @@ func compileIgnorer(path string) *ignore.GitIgnore {
 	}
 
 	return ignorer
+}
+
+func readFileContent(path string) string {
+	content, err := os.ReadFile(path)
+	if err != nil {
+		return "<error reading: " + err.Error() + ">"
+	}
+	return string(content)
 }
 
 func getGlobalGitIgnorePath() string {
