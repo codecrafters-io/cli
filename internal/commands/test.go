@@ -129,12 +129,26 @@ func copyRepositoryDirToTempDir(repoDir string) (string, error) {
 
 	gitIgnore := utils.NewGitIgnore(repoDir)
 
+	println("⛳ before copy:")
+	lsOutput, err := exec.Command("ls", "-la", tmpDir).CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("list temp dir: %w", err)
+	}
+	fmt.Println("⛳ ls -la ", repoDir, ":", string(lsOutput))
+
 	err = cp.Copy(repoDir, tmpDir, cp.Options{
 		Skip: gitIgnore.SkipFile,
 	})
 	if err != nil {
 		return "", fmt.Errorf("copy files: %w", err)
 	}
+
+	println("⛳ after copy:")
+	lsOutput, err = exec.Command("ls", "-la", tmpDir).CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("list temp dir: %w", err)
+	}
+	fmt.Println("⛳ ls -la ", tmpDir, ":", string(lsOutput))
 
 	return tmpDir, nil
 }
