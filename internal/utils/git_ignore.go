@@ -27,6 +27,11 @@ func NewGitIgnore(baseDir string) GitIgnore {
 }
 
 func (i GitIgnore) SkipFile(path string) (bool, error) {
+	// Never skip the .git directory, even if it's in the .gitignore files.
+	if path == ".git" {
+		return false, nil
+	}
+
 	for _, ignorer := range []*ignore.GitIgnore{i.localGitIgnore, i.globalGitIgnore, i.gitInfoExclude} {
 		if ignorer != nil && ignorer.MatchesPath(path) {
 			return true, nil
