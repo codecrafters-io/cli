@@ -57,7 +57,12 @@ func getGlobalGitIgnorePath() string {
 		if err != nil {
 			return ""
 		}
-		path = filepath.Join(homeDir, path[2:])
+		// Handle tilde expansion for both Unix (~/) and Windows (~\ or ~/)
+		// Strip the leading ~ and any path separator that follows
+		relativePath := strings.TrimPrefix(path, "~")
+		relativePath = strings.TrimPrefix(relativePath, "/")
+		relativePath = strings.TrimPrefix(relativePath, string(filepath.Separator))
+		path = filepath.Join(homeDir, relativePath)
 	}
 
 	return path
