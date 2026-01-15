@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"net/url"
 	"os/exec"
 	"regexp"
 	"strings"
@@ -121,7 +122,7 @@ OUTER:
 
 		if remoteLineRegex.MatchString(line) {
 			matches := remoteLineRegex.FindStringSubmatch(line)
-			remote := GitRemote{Name: matches[1], Url: matches[2]}
+			remote := GitRemote{Name: matches[1], Url: sanitizeRemoteURL(matches[2])}
 
 			for _, existingRemote := range remotes {
 				if existingRemote.Url == remote.Url {
@@ -134,4 +135,24 @@ OUTER:
 	}
 
 	return remotes, nil
+}
+
+func sanitizeRemoteURL(raw string) string {
+	// Some environments (including CI) configure git to rewrite GitHub URLs to include
+	// credentials (ex: https://x-access-token:***@github.com/org/repo). That can leak
+	// into `git remote -v` output and break comparisons/messages.
+	//
+	// We strip this userinfo when the remote is a standard URL. SCP-like remotes
+	// (ex: git@github.com:org/repo.git) are left untouched.
+	u, err := url.Parse(raw)
+	if err != nil {
+		return raw
+	}
+
+	if u.Scheme == "" || u.Host == "" {
+		return raw
+	}
+
+	u.User = nil
+	return u.String()
 }

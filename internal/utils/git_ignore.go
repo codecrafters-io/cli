@@ -27,8 +27,19 @@ func NewGitIgnore(baseDir string) GitIgnore {
 }
 
 func (i GitIgnore) SkipFile(path string) (bool, error) {
+	// Normalize paths to what gitignore-style patterns expect:
+	// - relative to repo root (when possible)
+	// - forward slashes (even on Windows)
+	normalizedPath := path
+	if filepath.IsAbs(normalizedPath) {
+		if rel, err := filepath.Rel(i.baseDir, normalizedPath); err == nil && rel != ".." && !strings.HasPrefix(rel, ".."+string(os.PathSeparator)) {
+			normalizedPath = rel
+		}
+	}
+	normalizedPath = filepath.ToSlash(normalizedPath)
+
 	for _, ignorer := range []*ignore.GitIgnore{i.localGitIgnore, i.globalGitIgnore, i.gitInfoExclude} {
-		if ignorer != nil && ignorer.MatchesPath(path) {
+		if ignorer != nil && ignorer.MatchesPath(normalizedPath) {
 			return true, nil
 		}
 	}
