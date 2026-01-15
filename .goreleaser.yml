@@ -4,6 +4,13 @@ builds:
     - CGO_ENABLED=0
   main: ./cmd/codecrafters
   binary: codecrafters
+  goos:
+    - linux
+    - darwin
+    - windows
+  goarch:
+    - amd64
+    - arm64
   ldflags: "-s -w -X github.com/codecrafters-io/cli/internal/utils.Version={{.Version}} -X github.com/codecrafters-io/cli/internal/utils.Commit={{.Commit}}"
 
 archives:

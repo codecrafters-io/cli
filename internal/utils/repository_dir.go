@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"regexp"
 	"strings"
 )
@@ -29,5 +30,5 @@ func GetRepositoryDir() (string, error) {
 		return "", fmt.Errorf("failed to run 'git rev-parse' to get repository dir. err: %v.\n%s", err, string(outputBytes))
 	}
 
-	return strings.TrimSpace(string(outputBytes)), nil
+	return filepath.Clean(strings.TrimSpace(string(outputBytes))), nil
 }

@@ -8,6 +8,7 @@ import (
 	"github.com/codecrafters-io/cli/internal/commands"
 	"github.com/codecrafters-io/cli/internal/utils"
 	"github.com/fatih/color"
+	"github.com/mattn/go-colorable"
 )
 
 // Usage: codecrafters test
@@ -61,7 +62,7 @@ VERSION
 		red := color.New(color.FgRed).SprintFunc()
 
 		if err.Error() != "" {
-			fmt.Fprintf(os.Stderr, "%v\n", red(err))
+			fmt.Fprintf(colorable.NewColorableStderr(), "%v\n", red(err))
 		}
 
 		os.Exit(1)
@@ -99,7 +100,7 @@ func run() error {
 		flag.Usage()
 	default:
 		red := color.New(color.FgRed).SprintFunc()
-		fmt.Printf(red("Unknown command '%s'. Did you mean to run `codecrafters test`?\n\n"), cmd)
+		fmt.Fprintf(colorable.NewColorableStdout(), red("Unknown command '%s'. Did you mean to run `codecrafters test`?\n\n"), cmd)
 		fmt.Printf("Run `codecrafters help` for a list of available commands.\n")
 
 		return fmt.Errorf("")

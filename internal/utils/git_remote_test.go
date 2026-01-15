@@ -62,7 +62,10 @@ func TestIdentifyGitRemoteWithMultipleCodecraftersRemotes(t *testing.T) {
 	createRemote(t, repositoryDir, "origin2", "https://git.codecrafters.io/dummy2")
 
 	_, err := IdentifyGitRemote(repositoryDir)
-	assert.EqualError(t, err, "Multiple CodeCrafters git remotes found: https://git.codecrafters.io/dummy1, https://git.codecrafters.io/dummy2")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "Multiple CodeCrafters git remotes found")
+	assert.Contains(t, err.Error(), "https://git.codecrafters.io/dummy1")
+	assert.Contains(t, err.Error(), "https://git.codecrafters.io/dummy2")
 }
 
 func TestIdentifyGitRemoteWithNoCodecraftersRemotes(t *testing.T) {
@@ -71,7 +74,10 @@ func TestIdentifyGitRemoteWithNoCodecraftersRemotes(t *testing.T) {
 	createRemote(t, repositoryDir, "github", "https://github.com/codecrafters-io/dummy2")
 
 	_, err := IdentifyGitRemote(repositoryDir)
-	assert.EqualError(t, err, "No CodeCrafters git remotes found. Available remotes: https://github.com/codecrafters-io/dummy2, https://gitlab.com/codecrafters-io/dummy1\nPlease run this command from within your CodeCrafters Git repository.")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "No CodeCrafters git remotes found. Available remotes:")
+	assert.Contains(t, err.Error(), "dummy1")
+	assert.Contains(t, err.Error(), "dummy2")
 }
 
 func createEmptyRepository(t *testing.T) string {

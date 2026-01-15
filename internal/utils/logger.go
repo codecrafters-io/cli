@@ -5,6 +5,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/mattn/go-colorable"
 	"github.com/rs/zerolog"
 )
 
@@ -18,6 +19,7 @@ func newLogger() zerolog.Logger {
 	zerolog.TimeFieldFormat = time.RFC3339Nano
 
 	logWriter := zerolog.NewConsoleWriter(func(w *zerolog.ConsoleWriter) {
+		w.Out = colorable.NewColorableStdout()
 		w.TimeFormat = "15:04:05.000"
 
 		w.FormatMessage = func(message interface{}) string {
