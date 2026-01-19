@@ -39,7 +39,7 @@ INSTALL_PATH=${INSTALL_PATH:-$INSTALL_DIR/codecrafters}
 
 DOWNLOAD_URL="https://github.com/codecrafters-io/cli/releases/download/${VERSION}/${VERSION}_${OS}_${ARCH}.tar.gz"
 
-echo -e "Downloading ${GREEN}CodeCrafters CLI ${MUTED}(${VERSION})${NC}..."
+printf '%b\n' "Downloading ${GREEN}CodeCrafters CLI ${MUTED}(${VERSION})${NC}..."
 
 if [ "$(id -u)" = "0" ]; then
 	echo "Warning: this script is currently running as root. This is dangerous. "
@@ -55,37 +55,37 @@ TEMP_FILE=$(mktemp "${TMPDIR:-/tmp}/.codecrafterscli.XXXXXXXX")
 TEMP_FOLDER=$(mktemp -d "${TMPDIR:-/tmp}/.codecrafterscli-headers.XXXXXXXX")
 
 cleanup() {
-	echo -e "${NC}" # Ensure none of our colors leak
+	printf '%b' "${NC}" # Ensure none of our colors leak
 	rm -f "$TEMP_FILE"
 	rm -rf "$TEMP_FOLDER"
 }
 
 trap cleanup EXIT
 
-echo -e "${MUTED}" # Muted progress bar
+printf '%b' "${MUTED}" # Muted progress bar
 
 HTTP_CODE=$(curl -SL --progress-bar "$DOWNLOAD_URL" --output "$TEMP_FILE" --write-out "%{http_code}")
 if [ "$HTTP_CODE" -lt 200 ] || [ "$HTTP_CODE" -gt 299 ]; then
-	echo -e "${NC}"
+	printf '%b' "${NC}"
 	echo "error: your platform and architecture (${PLATFORM}-${ARCH}) is unsupported."
 	exit 1
 fi
 
-echo -e "${NC}"
+printf '%b' "${NC}"
 
 tar xzf "$TEMP_FILE" -C "$TEMP_FOLDER" codecrafters
 
 chmod 0755 "$TEMP_FOLDER/codecrafters"
 
 if ! mkdir -p "$INSTALL_DIR" 2>/dev/null; then
-	echo -e "${MUTED}Note:${NC} You might need to enter your password to install."
+	printf '%b\n' "${MUTED}Note:${NC} You might need to enter your password to install."
 	sudo mkdir -p "$INSTALL_DIR"
 fi
 
 if ! mv "$TEMP_FOLDER/codecrafters" "$INSTALL_PATH" 2>/dev/null; then
-	echo -e "${MUTED}Note:${NC} You might need to enter your password to install."
+	printf '%b\n' "${MUTED}Note:${NC} You might need to enter your password to install."
 	sudo mv "$TEMP_FOLDER/codecrafters" "$INSTALL_PATH"
 fi
 
 echo ""
-echo -e "${GREEN}✔︎${NC} CodeCrafters CLI installed! ${MUTED}Version: $("$INSTALL_PATH" --version)${NC}"
+printf '%b\n' "${GREEN}✔︎${NC} CodeCrafters CLI installed! ${MUTED}Version: $("$INSTALL_PATH" --version)${NC}"
