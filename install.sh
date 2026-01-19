@@ -5,6 +5,10 @@ set -eu
 # allow overriding the version
 VERSION=${CODECRAFTERS_CLI_VERSION:-v46}
 
+MUTED='\033[0;2m'
+GREEN='\033[0;32m'
+NC='\033[0m' # No Color
+
 PLATFORM=$(uname -s)
 ARCH=$(uname -m)
 
@@ -35,9 +39,7 @@ INSTALL_PATH=${INSTALL_PATH:-$INSTALL_DIR/codecrafters}
 
 DOWNLOAD_URL="https://github.com/codecrafters-io/cli/releases/download/${VERSION}/${VERSION}_${OS}_${ARCH}.tar.gz"
 
-echo "This script will automatically install codecrafters (${VERSION}) for you."
-echo "You will be prompted for your password by sudo if needed."
-echo "Installation path: ${INSTALL_PATH}"
+echo -e "Downloading ${GREEN}CodeCrafters CLI ${MUTED}(${VERSION})${NC}..."
 
 if [ "$(id -u)" = "0" ]; then
 	echo "Warning: this script is currently running as root. This is dangerous. "
@@ -53,31 +55,37 @@ TEMP_FILE=$(mktemp "${TMPDIR:-/tmp}/.codecrafterscli.XXXXXXXX")
 TEMP_FOLDER=$(mktemp -d "${TMPDIR:-/tmp}/.codecrafterscli-headers.XXXXXXXX")
 
 cleanup() {
+	echo -e "${NC}" # Ensure none of our colors leak
 	rm -f "$TEMP_FILE"
 	rm -rf "$TEMP_FOLDER"
 }
 
 trap cleanup EXIT
 
-echo Downloading CodeCrafters CLI...
+echo -e "${MUTED}" # Muted progress bar
 
 HTTP_CODE=$(curl -SL --progress-bar "$DOWNLOAD_URL" --output "$TEMP_FILE" --write-out "%{http_code}")
 if [ "$HTTP_CODE" -lt 200 ] || [ "$HTTP_CODE" -gt 299 ]; then
+	echo -e "${NC}"
 	echo "error: your platform and architecture (${PLATFORM}-${ARCH}) is unsupported."
 	exit 1
 fi
+
+echo -e "${NC}"
 
 tar xzf "$TEMP_FILE" -C "$TEMP_FOLDER" codecrafters
 
 chmod 0755 "$TEMP_FOLDER/codecrafters"
 
 if ! mkdir -p "$INSTALL_DIR" 2>/dev/null; then
-	sudo -k mkdir -p "$INSTALL_DIR"
+	echo -e "${MUTED}Note:${NC} You might need to enter your password to install."
+	sudo mkdir -p "$INSTALL_DIR"
 fi
+
 if ! mv "$TEMP_FOLDER/codecrafters" "$INSTALL_PATH" 2>/dev/null; then
-	sudo -k mv "$TEMP_FOLDER/codecrafters" "$INSTALL_PATH"
+	echo -e "${MUTED}Note:${NC} You might need to enter your password to install."
+	sudo mv "$TEMP_FOLDER/codecrafters" "$INSTALL_PATH"
 fi
 
-echo "Installed $("$INSTALL_PATH" --version)"
-
-echo 'Done!'
+echo ""
+echo -e "${GREEN}✔︎${NC} CodeCrafters CLI installed! ${MUTED}Version: $("$INSTALL_PATH" --version)${NC}"
