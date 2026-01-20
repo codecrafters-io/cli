@@ -56,10 +56,10 @@ try {
         $env:Path += ";$InstallDir" 
     }
 
-    Write-Host ""
-    Write-Host ([char]0x2714) -ForegroundColor Green -NoNewline
+    Write-Host ([char]0x2713) -ForegroundColor Green -NoNewline
     Write-Host " CodeCrafters CLI installed! " -NoNewline
     Write-Host "Version: $InstalledVersion" -ForegroundColor DarkGray
+    Write-Host ""
 } finally {
     # Cleanup
     if (Test-Path $TempDir) {
