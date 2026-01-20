@@ -20,20 +20,21 @@ $InstallPath = if ($env:INSTALL_PATH) { $env:INSTALL_PATH } else { "$InstallDir\
 
 $DownloadUrl = "https://github.com/codecrafters-io/cli/releases/download/$Version/${Version}_windows_$Arch.tar.gz"
 
-Write-Host "This script will automatically install codecrafters ($Version) for you."
-Write-Host "Installation path: $InstallPath"
+Write-Host "Downloading " -NoNewline
+Write-Host "CodeCrafters CLI " -ForegroundColor Green -NoNewline
+Write-Host "($Version)" -ForegroundColor DarkGray -NoNewline
+Write-Host "..."
 
 $TempDir = Join-Path $env:TEMP "codecrafters-install-$([System.Guid]::NewGuid().ToString('N'))"
 New-Item -ItemType Directory -Path $TempDir -Force | Out-Null
 
 try {
     $TarGzPath = Join-Path $TempDir "codecrafters.tar.gz"
-    Write-Host "Downloading CodeCrafters CLI..."
 
     try {
         Invoke-WebRequest -Uri $DownloadUrl -OutFile $TarGzPath -UseBasicParsing
     } catch {
-        Write-Error "Failed to download. Your platform and architecture (windows-$Arch) may be unsupported."
+        Write-Host "error: your platform and architecture (windows-$Arch) is unsupported."
         exit 1
     }
 
@@ -47,7 +48,6 @@ try {
     Move-Item -Path $ExtractedBinary -Destination $InstallPath -Force
 
     $InstalledVersion = & $InstallPath --version
-    Write-Host "Installed $InstalledVersion"
 
     $UserPath = [Environment]::GetEnvironmentVariable("Path", "User")
     if ($UserPath -notlike "*$InstallDir*") {
@@ -55,7 +55,11 @@ try {
         [Environment]::SetEnvironmentVariable("Path", $NewUserPath, "User")
         $env:Path += ";$InstallDir" 
     }
-    Write-Host "Done!"
+
+    Write-Host ""
+    Write-Host ([char]0x2714) -ForegroundColor Green -NoNewline
+    Write-Host " CodeCrafters CLI installed! " -NoNewline
+    Write-Host "Version: $InstalledVersion" -ForegroundColor DarkGray
 } finally {
     # Cleanup
     if (Test-Path $TempDir) {
