@@ -14,8 +14,10 @@ ARCH=$(uname -m)
 
 if [ "$PLATFORM" = "Darwin" ]; then
 	OS=darwin
+	OS_NAME=macOS
 elif [ "${PLATFORM%% *}" = "Linux" ]; then
 	OS=linux
+	OS_NAME=Linux
 else
 	echo "This installer is only supported on Linux and MacOS."
 	exit 1
@@ -78,12 +80,14 @@ tar xzf "$TEMP_FILE" -C "$TEMP_FOLDER" codecrafters
 chmod 0755 "$TEMP_FOLDER/codecrafters"
 
 if ! mkdir -p "$INSTALL_DIR" 2>/dev/null; then
-	echo -e "${MUTED}Note:${NC} You might need to enter your password to install."
+	echo -e "${MUTED}Installing to $INSTALL_DIR. Admin access required.${NC}"
+	echo "Enter your ${OS_NAME} user password to grant access."
 	sudo mkdir -p "$INSTALL_DIR"
 fi
 
 if ! mv "$TEMP_FOLDER/codecrafters" "$INSTALL_PATH" 2>/dev/null; then
-	echo -e "${MUTED}Note:${NC} You might need to enter your password to install."
+	echo -e "${MUTED}Installing as $INSTALL_PATH. Admin access required.${NC}"
+	echo "Enter your ${OS_NAME} user password to grant access."
 	sudo mv "$TEMP_FOLDER/codecrafters" "$INSTALL_PATH"
 fi
 
