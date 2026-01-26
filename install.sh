@@ -80,7 +80,7 @@ tar xzf "$TEMP_FILE" -C "$TEMP_FOLDER" codecrafters
 chmod 0755 "$TEMP_FOLDER/codecrafters"
 
 if ! mkdir -p "$INSTALL_DIR" 2>/dev/null; then
-	echo -e"${MUTED}Note:${NC} You might need to enter your ${OS_NAME} user password to install."
+	echo -e "${MUTED}Note:${NC} You might need to enter your ${OS_NAME} user password to install."
 	sudo mkdir -p "$INSTALL_DIR"
 fi
 
