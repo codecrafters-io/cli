@@ -1,10 +1,11 @@
 version: 2
 builds:
-- env:
-    - CGO_ENABLED=0
-  main: ./cmd/codecrafters
-  binary: codecrafters
-  ldflags: "-s -w -X github.com/codecrafters-io/cli/internal/utils.Version={{.Version}} -X github.com/codecrafters-io/cli/internal/utils.Commit={{.Commit}}"
+  - env:
+      - CGO_ENABLED=0
+      - MACOSX_DEPLOYMENT_TARGET=10.13
+    main: ./cmd/codecrafters
+    binary: codecrafters
+    ldflags: "-s -w -X github.com/codecrafters-io/cli/internal/utils.Version={{.Version}} -X github.com/codecrafters-io/cli/internal/utils.Commit={{.Commit}}"
 
 archives:
   - name_template: "{{ .Tag }}_{{ .Os }}_{{ .Arch }}"
