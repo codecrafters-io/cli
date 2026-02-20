@@ -136,6 +136,15 @@ func copyRepositoryDirToTempDir(repoDir string) (string, error) {
 		return "", fmt.Errorf("copy files: %w", err)
 	}
 
+	files, err := os.ReadDir(tmpDir)
+	if err != nil {
+		return "", fmt.Errorf("list temp dir: %w", err)
+	}
+	fmt.Println("🔍 Contents of temp dir " + tmpDir + ":")
+	for _, file := range files {
+		fmt.Println(" -", file.Name())
+	}
+
 	return tmpDir, nil
 }
 
