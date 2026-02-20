@@ -47,6 +47,28 @@ func TestGitIgnore(t *testing.T) {
 		assertFileSkipped(t, &gitIgnore, "ignore/this/file.txt")
 		assertFileNotSkipped(t, &gitIgnore, "some/other/file.txt")
 	})
+
+	t.Run("never skip .git directory or files inside it", func(t *testing.T) {
+		tmpRepoDir := t.TempDir()
+		writeFile(t, filepath.Join(tmpRepoDir, ".gitignore"), ".git\n.git/*\n") // would match .git if we didn't special-case it
+		gitIgnore := NewGitIgnore(tmpRepoDir)
+
+		pathsThatMustNotBeSkipped := []string{
+			".git",
+			".git/HEAD",
+			".git/config",
+			".git/refs/heads/main",
+			"/Users/example/repo/.git",
+			"repo/.git",
+			"subdir/repo/.git/refs",
+		}
+		for _, path := range pathsThatMustNotBeSkipped {
+			path := path
+			t.Run(path, func(t *testing.T) {
+				assertFileNotSkipped(t, &gitIgnore, path)
+			})
+		}
+	})
 }
 
 func assertFileSkipped(t *testing.T, gitIgnore *GitIgnore, path string) {
