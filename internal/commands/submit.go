@@ -76,8 +76,8 @@ func SubmitCommand() (err error) {
 		return fmt.Errorf("commit changes: %w", err)
 	}
 
-	// Place this before the push so that it "feels" fast
-	fmt.Printf("Submitting changes (commit: %s)...\n", commitSha[:7])
+	// Place this before the push so that it "feels" fast.
+	fmt.Printf("Submitting changes (commit: %s)...\n\n", commitSha[:7])
 
 	err = pushBranchToRemote(repoDir, codecraftersRemote.Name)
 	if err != nil {
