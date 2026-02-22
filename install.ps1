@@ -3,7 +3,7 @@ $ErrorActionPreference = "Stop"
 $ProgressPreference = 'SilentlyContinue'  # Speeds up Invoke-WebRequest significantly
 
 # Allow overriding the version
-$Version = if ($env:CODECRAFTERS_CLI_VERSION) { $env:CODECRAFTERS_CLI_VERSION } else { "v48" }
+$Version = if ($env:CODECRAFTERS_CLI_VERSION) { $env:CODECRAFTERS_CLI_VERSION } else { "v49" }
 
 # Detect architecture
 $Arch = switch ($env:PROCESSOR_ARCHITECTURE) {
@@ -53,7 +53,7 @@ try {
     if ($UserPath -notlike "*$InstallDir*") {
         $NewUserPath = if ($UserPath) { "$UserPath;$InstallDir" } else { $InstallDir }
         [Environment]::SetEnvironmentVariable("Path", $NewUserPath, "User")
-        $env:Path += ";$InstallDir" 
+        $env:Path += ";$InstallDir"
     }
 
     Write-Host ([char]0x2713) -ForegroundColor Green -NoNewline
