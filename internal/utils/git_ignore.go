@@ -28,19 +28,14 @@ func NewGitIgnore(baseDir string) GitIgnore {
 }
 
 func (i GitIgnore) SkipFile(path string) (bool, error) {
-	if path == ".git" ||
-		strings.HasPrefix(path, ".git/") ||
-		strings.HasSuffix(path, "/.git") ||
-		strings.Contains(path, "/.git/") {
-		fmt.Println("❌ skipping " + path)
-	}
-
 	for _, ignorer := range []*ignore.GitIgnore{i.localGitIgnore, i.globalGitIgnore, i.gitInfoExclude} {
 		if ignorer != nil && ignorer.MatchesPath(path) {
+			fmt.Println("❌ skipping " + path)
 			return true, nil
 		}
 	}
 
+	fmt.Println("✅ not skipping " + path)
 	return false, nil
 }
 
