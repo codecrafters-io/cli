@@ -24,13 +24,13 @@ USAGE
   $ codecrafters [command]
 
 EXAMPLES
+  $ codecrafters submit            # Commit changes & run tests
   $ codecrafters test              # Run tests without committing changes
   $ codecrafters test --previous   # Run tests for all previous stages and the current stage without committing changes
-  $ codecrafters submit            # Commit changes & submit to move to next step
 
 COMMANDS
+  submit:           Commit changes & run tests
   test:             Run tests without committing changes
-  submit:           Commit changes & submit to move to next step
   task:             View current stage instructions
   update-buildpack: Update language version
   ping:             Test the connection to a CodeCrafters repository
