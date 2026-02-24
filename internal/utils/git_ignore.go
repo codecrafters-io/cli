@@ -27,6 +27,9 @@ func NewGitIgnore(baseDir string) GitIgnore {
 }
 
 func (i GitIgnore) SkipFile(path string) (bool, error) {
+	path = strings.TrimPrefix(path, i.baseDir)
+	path = strings.TrimPrefix(path, "/")
+
 	// Never skip the .git directory or files inside it, even if matched by .gitignore patterns.
 	if path == ".git" ||
 		strings.HasPrefix(path, ".git/") ||
