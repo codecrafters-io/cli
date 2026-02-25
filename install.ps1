@@ -3,7 +3,7 @@ $ErrorActionPreference = "Stop"
 $ProgressPreference = 'SilentlyContinue'  # Speeds up Invoke-WebRequest significantly
 
 # Allow overriding the version
-$Version = if ($env:CODECRAFTERS_CLI_VERSION) { $env:CODECRAFTERS_CLI_VERSION } else { "v50" }
+$Version = if ($env:CODECRAFTERS_CLI_VERSION) { $env:CODECRAFTERS_CLI_VERSION } else { "v52" }
 
 # Detect architecture
 $Arch = switch ($env:PROCESSOR_ARCHITECTURE) {
