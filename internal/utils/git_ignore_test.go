@@ -69,6 +69,27 @@ func TestGitIgnore(t *testing.T) {
 			})
 		}
 	})
+
+	t.Run("match only paths within baseDir, not its parent directories", func(t *testing.T) {
+		backup := setupGlobalGitIgnore(t, "var/\nignore.txt\n")
+		defer func() {
+			if backup.originalPath == "" {
+				unsetGlobalGitIgnoreConfig(t)
+			}
+			backup.Restore(t)
+		}()
+
+		baseDir := filepath.Join(t.TempDir(), "var", "home", "user", "repo")
+		err := os.MkdirAll(baseDir, 0755)
+		assert.NoError(t, err)
+		writeFile(t, filepath.Join(baseDir, "not-ignore.txt"), "not-ignore")
+		writeFile(t, filepath.Join(baseDir, "ignore.txt"), "ignore")
+
+		gitIgnore := NewGitIgnore(baseDir)
+
+		assertFileNotSkipped(t, &gitIgnore, filepath.Join(baseDir, "not-ignore.txt"))
+		assertFileSkipped(t, &gitIgnore, filepath.Join(baseDir, "ignore.txt"))
+	})
 }
 
 func assertFileSkipped(t *testing.T, gitIgnore *GitIgnore, path string) {
