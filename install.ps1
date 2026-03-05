@@ -40,7 +40,7 @@ try {
 
     tar -xzf $TarGzPath -C $TempDir
 
-    if (-not (Test-Path $InstallDir)) {
+    if (-not (Test-Path -LiteralPath $InstallDir)) {
         New-Item -ItemType Directory -Path $InstallDir -Force | Out-Null
     }
 
@@ -62,7 +62,11 @@ try {
     Write-Host ""
 } finally {
     # Cleanup
-    if (Test-Path $TempDir) {
-        Remove-Item -Path $TempDir -Recurse -Force -ErrorAction SilentlyContinue
+    if (Test-Path -LiteralPath $TempDir) {
+        try {
+            Remove-Item -LiteralPath $TempDir -Recurse -Force -ErrorAction Stop
+        } catch {
+            Write-Host "Warning: couldn't clean up temporary folder: $TempDir" -ForegroundColor Yellow
+        }
     }
 }
