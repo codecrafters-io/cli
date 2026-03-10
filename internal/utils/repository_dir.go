@@ -19,10 +19,8 @@ func GetRepositoryDir() (string, error) {
 	if err != nil {
 		if _, ok := err.(*exec.ExitError); ok {
 			if regexp.MustCompile("not a git repository").Match(outputBytes) {
-				fmt.Fprintf(os.Stderr, "The current directory is not within a Git repository.\n")
-				fmt.Fprintf(os.Stderr, "Please run this command from within your CodeCrafters Git repository.\n")
-
-				return "", errors.New("used not in a repository")
+				return "", errors.New(`Error: The current directory is not within a Git repository.
+Please run this command from within your CodeCrafters Git repository.`)
 			}
 		}
 
