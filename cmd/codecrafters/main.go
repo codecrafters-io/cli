@@ -82,7 +82,23 @@ func run() error {
 
 		return commands.TestCommand(*shouldTestPrevious)
 	case "submit":
-		return commands.SubmitCommand()
+		submitCmd := flag.NewFlagSet("submit", flag.ExitOnError)
+		msgShort := submitCmd.String("m", "", "commit message")
+		msgLong  := submitCmd.String("message", "", "commit message")
+		submitCmd.Parse(flag.Args()[1:])
+		if submitCmd.NArg() > 0 {
+			red := color.New(color.FgRed).SprintFunc()
+			fmt.Fprintf(os.Stderr, "%s\n", red("Error: custom commit message must be passed using -m or --message"))
+			os.Exit(1)
+		}
+		msg := *msgShort
+		if msg == "" {
+			msg = *msgLong
+		}
+		if msg == "" {
+			msg = "codecrafters submit [skip ci]"
+		}
+    	return commands.SubmitCommand(msg)
 	case "task":
 		taskCmd := flag.NewFlagSet("task", flag.ExitOnError)
 		stageSlug := taskCmd.String("stage", "", "view instructions for a specific stage (slug, +N, or -N)")
