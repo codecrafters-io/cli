@@ -25,6 +25,7 @@ USAGE
 
 EXAMPLES
   $ codecrafters submit            # Commit changes & run tests
+  $ codecrafters submit -m "msg"   # Commit changes & run tests with a custom commit message
   $ codecrafters test              # Run tests without committing changes
   $ codecrafters test --previous   # Run tests for all previous stages and the current stage without committing changes
 
@@ -77,28 +78,28 @@ func run() error {
 	switch cmd {
 	case "test":
 		testCmd := flag.NewFlagSet("test", flag.ExitOnError)
-		shouldTestPrevious := testCmd.Bool("previous", false, "run tests for the current stage and all previous stages in ascending order")
+		shouldTestPrevious := testCmd.Bool("previous", false, "Run tests for all previous stages and the current stage without committing changes")
 		testCmd.Parse(flag.Args()[1:]) // parse the args after the test command
 
 		return commands.TestCommand(*shouldTestPrevious)
 	case "submit":
 		submitCmd := flag.NewFlagSet("submit", flag.ExitOnError)
-		msgShort := submitCmd.String("m", "", "commit message")
-		msgLong  := submitCmd.String("message", "", "commit message")
+
+		var commitMessage string
+		defaultCommitMessage := "codecrafters submit"
+		usage := "Commit changes & run tests with a custom commit message"
+		submitCmd.StringVar(&commitMessage, "m", defaultCommitMessage, usage)
+		submitCmd.StringVar(&commitMessage, "message", defaultCommitMessage, usage)
+
 		submitCmd.Parse(flag.Args()[1:])
 		if submitCmd.NArg() > 0 {
-			red := color.New(color.FgRed).SprintFunc()
-			fmt.Fprintf(os.Stderr, "%s\n", red("Error: custom commit message must be passed using -m or --message"))
-			os.Exit(1)
+			return fmt.Errorf("Unexpected arguments: use -m or --message to set a custom commit message.")
 		}
-		msg := *msgShort
-		if msg == "" {
-			msg = *msgLong
+		if commitMessage == "" {
+			return fmt.Errorf("Cannot submit with an empty commit message.")
 		}
-		if msg == "" {
-			msg = "codecrafters submit [skip ci]"
-		}
-    	return commands.SubmitCommand(msg)
+
+		return commands.SubmitCommand(commitMessage + " [skip ci]")
 	case "task":
 		taskCmd := flag.NewFlagSet("task", flag.ExitOnError)
 		stageSlug := taskCmd.String("stage", "", "view instructions for a specific stage (slug, +N, or -N)")

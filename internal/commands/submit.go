@@ -12,7 +12,7 @@ import (
 	"github.com/getsentry/sentry-go"
 )
 
-func SubmitCommand(message string) (err error) {
+func SubmitCommand(commitMessage string) (err error) {
 	utils.Logger.Debug().Msg("submit command starts")
 
 	defer func() {
@@ -70,7 +70,7 @@ func SubmitCommand(message string) (err error) {
 	}
 
 	utils.Logger.Debug().Msgf("committing changes to %s", defaultBranchName)
-	commitSha, err := commitChanges(repoDir, message)
+	commitSha, err := commitChanges(repoDir, commitMessage)
 	if err != nil {
 		return fmt.Errorf("commit changes: %w", err)
 	}
