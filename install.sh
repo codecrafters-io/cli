@@ -69,7 +69,7 @@ echo -e "${MUTED}" # Muted progress bar
 HTTP_CODE=$(curl -SL --progress-bar "$DOWNLOAD_URL" --output "$TEMP_FILE" --write-out "%{http_code}")
 if [ "$HTTP_CODE" -lt 200 ] || [ "$HTTP_CODE" -gt 299 ]; then
 	echo -e "${NC}"
-	echo "error: your platform and architecture (${PLATFORM}-${ARCH}) is unsupported."
+	echo "error: failed to download binary (HTTP $HTTP_CODE). This may be due to an unsupported platform (${PLATFORM}-${ARCH}) or a network issue."
 	exit 1
 fi
 
