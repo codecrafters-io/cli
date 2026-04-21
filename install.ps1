@@ -34,7 +34,7 @@ try {
     try {
         Invoke-WebRequest -Uri $DownloadUrl -OutFile $TarGzPath -UseBasicParsing
     } catch {
-        Write-Host "error: your platform and architecture (windows-$Arch) is unsupported."
+        Write-Host "error: failed to download binary. This may be due to an unsupported platform (windows-$Arch) or a network issue."
         exit 1
     }
 
