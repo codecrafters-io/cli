@@ -3,7 +3,7 @@
 set -euo pipefail
 
 # allow overriding the version
-VERSION=${CODECRAFTERS_CLI_VERSION:-v53}
+VERSION=${CODECRAFTERS_CLI_VERSION:-v54}
 
 MUTED='\033[0;2m'
 GREEN='\033[0;32m'
